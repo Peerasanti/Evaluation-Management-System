@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluation Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+
+    <style>
+        body {
+            background-color: #F5F5F5;
+        }
+        
+        .title {
+            text-align: center;
+            color: rgb(86, 86, 241);
+            font-size: 40px;
+            font-weight: bold;
+            font-family: 'Times New Roman', Times, serif;
+        }
+
+        .form {
+            text-align: center;
+        }
+
+        input[type=text], input[type=number] {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        } 
+        
+        .btn {
+            text-align: center;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 15px;
+            font-weight: bold;
+            display: inline-block;
+            text-decoration: none;
+            border: none;
+            outline: none;
+            padding: 10px;
+            margin: 10px;   
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: rgb(86, 86, 241);
+            color: white;
+            cursor: pointer;
+        }
+
+        #name {
+            width: 460px;
+        }
+
+        .score {
+            width: 70px;
+        }
+
+        #submit {
+            width: 70px;
+            font-family: 'Times New Roman', Times, serif;
+        }
+
+        #submit:hover {
+            background-color: blue;
+        }
+
+        .table {
+            text-align: center;
+            font-family: 'Times New Roman', Times, serif;
+            border-collapse: collapse;
+            font-size: 14px;
+            margin: 20px auto;
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: white;
+            
+        }
+        
+
+        .table th, .table td {
+            border: 1px solid #ccc;
+            padding: 0 55px;
+            font-family: Arial, Helvetica, sans-serif;
+            
+        }
+        .table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
+
+        #edit {
+            background-color: #E4BE26;
+            cursor: pointer;
+        }
+
+        #delete {
+            background-color: red;
+            cursor: pointer;
+        }
+
+        .export-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px; 
+            margin: 20px 0;
+        }
+
+        .export {
+            background-color: #69cd69; 
+            color: white; 
+            border: none; 
+            padding: 10px 100px; 
+            border-radius: 5px;
+            cursor: pointer; 
+            font-size: 16px; 
+        }
+
+        .export:hover {
+            background-color: #40b040; 
+        }
+
+        .backdrop {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 99;
+        }
+
+        #editModal {
+            display:none; 
+            position:fixed;
+            top:30%; 
+            left:50%; 
+            transform:translate(-50%,-30%); 
+            background:#fff; 
+            padding:50px; 
+            border-radius:8px; 
+            box-shadow:0 0 10px rgba(0,0,0,0.3); 
+            z-index:1000;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px; 
+            margin-top: 10px; 
+        }
+         
+
+        .btn-save {
+            background-color: #28a745; 
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn-cancel {
+            background-color: #dc3545; 
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn-save:hover {
+            background-color: #218838; 
+        }
+
+        .btn-cancel:hover {
+            background-color: #c82333; 
+        }
+
+    </style>
+
+
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">
+            <i class="bi bi-wrench-adjustable-circle"></i>  Evaluation Management System
+        </h1>
+
+        <div id="modalBackdrop" class="backdrop"></div>
+
+        <div id="editModal">
+            <h3 style="text-align: center;">Edit Row</h3>
+            <input type="text" id="edit-name" placeholder="Name"><br><br>
+            <input type="number" id="edit-score1" placeholder="Score 1"><br><br>
+            <input type="number" id="edit-score2" placeholder="Score 2"><br><br>
+            <input type="number" id="edit-score3" placeholder="Score 3"><br><br>
+            <input type="number" id="edit-score4" placeholder="Score 4"><br><br>
+            <div class="modal-buttons">
+                <button class="btn-save" onclick="saveEdit()">Save</button>
+                <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+
+        <div class="form-score">
+            <form class="form" action="index.html" method="post" id="score-form">
+                <input type="text" name="username" placeholder="Add Name" id="name" class="name">
+                <input type="number" name="score_1" placeholder="Score 1" id="score_1" class="score">
+                <input type="number" name="score_2" placeholder="Score 2" id="score_2" class="score">
+                <input type="number" name="score_3" placeholder="Score 3" id="score_3" class="score">
+                <input type="number" name="score_4" placeholder="Score 4" id="score_4" class="score">
+                <button type="submit" class="btn btn-primary" id="submit">
+                    <i class="bi bi-plus-circle"></i>  Add
+                </button>
+            </form>
+
+            <div class="export-buttons">
+                <button type="button" class="export" id="excel">
+                    <i class="bi bi-file-earmark-excel"></i> Export to Excel
+                </button>
+                <button type="button" class="export" id="csv">
+                    <i class="bi bi-file-earmark-spreadsheet"></i> Export to CSV
+                </button> 
+            </div> 
+
+            <table class="table">
+                <thead class="table-primary">
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Score 1</th>
+                        <th scope="col">Score 2</th>
+                        <th scope="col">Score 3</th>
+                        <th scope="col">Score 4</th>
+                        <th scope="col">Total</th>
+                        <th scope="col">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+
+                </tbody>
+            </table>
+
+
+        </div>
+    </div>
+
+    <script>
+
+        const data = [];
+
+        const form = document.getElementById('score-form');
+        const tableBody = document.getElementById('table-body');
+
+        document.getElementById('csv').onclick = downloadCSV;
+        document.getElementById('excel').onclick = downloadExcel;
+
+        function deleteRow(button) {
+            const row = button.parentNode.parentNode;
+            tableBody.removeChild(row);
+        }
+
+        let editingRow = null;
+        function editRow(button) {
+            editingRow = button.parentNode.parentNode;
+            const cells = editingRow.querySelectorAll('td');
+
+            document.getElementById('edit-name').value = cells[0].textContent;
+            document.getElementById('edit-score1').value = cells[1].textContent;
+            document.getElementById('edit-score2').value = cells[2].textContent;
+            document.getElementById('edit-score3').value = cells[3].textContent;
+            document.getElementById('edit-score4').value = cells[4].textContent;
+
+            document.getElementById('editModal').style.display = 'block';
+            document.getElementById('modalBackdrop').style.display = 'block';
+        }
+
+        function saveEdit() {
+            const name = document.getElementById('edit-name').value || "-";
+            const score_1 = document.getElementById('edit-score1').value || "-";
+            const score_2 = document.getElementById('edit-score2').value || "-";
+            const score_3 = document.getElementById('edit-score3').value || "-";
+            const score_4 = document.getElementById('edit-score4').value || "-";
+
+            if(editingRow) {
+                const cells = editingRow.querySelectorAll('td');
+                cells[0].textContent = name;
+                cells[1].textContent = score_1;
+                cells[2].textContent = score_2;
+                cells[3].textContent = score_3;
+                cells[4].textContent = score_4;
+
+                const total = (parseInt(score_1) || 0) + (parseInt(score_2) || 0) + (parseInt(score_3) || 0) + (parseInt(score_4) || 0);
+                cells[5].textContent = total || "-";
+            }
+            closeModal();
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').style.display = 'none';
+            document.getElementById('modalBackdrop').style.display = 'none';
+        }
+
+        function downloadCSV() {
+            const table = document.querySelector('.table');
+            let csv = []
+            
+            const headers = table.querySelectorAll('thead th');
+            let headerRow = [];
+            headers.forEach((header, index) => {
+                if (index !== headers.length - 1) {
+                    headerRow.push(header.innerText.replace(/,/g, ''));
+                }
+            });
+            csv.push(headerRow.join(','));
+
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach((row) => {
+                let rowData = [];
+                const cells = row.querySelectorAll('td');
+                cells.forEach((cell, index) => {
+                    if (index != cells.length - 1) {
+                        rowData.push(cell.innerText.replace(/,/g, ''));
+                    }
+                });
+                csv.push(rowData.join(','));
+            });
+
+            const csvFile = new Blob([csv.join('\n')], { type: 'text/csv' });
+            const downloadLink = document.createElement('a');
+            downloadLink.href = URL.createObjectURL(csvFile);
+            downloadLink.download = 'Evaluation_Management_System_data.csv';
+            downloadLink.style.display = 'none';
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        }
+
+        function downloadExcel() {
+            const table = document.querySelector('.table');
+            const headers = [];
+
+            table.querySelectorAll('thead th').forEach((th, index, arr) => {
+                if (index !== arr.length - 1) {
+                    headers.push(th.innerText)
+                }
+            });
+
+            const data = [];
+            table.querySelectorAll('tbody tr').forEach(tr => {
+                const row = [];
+                tr.querySelectorAll('td').forEach((td, index, arr) => {
+                    if(index !== arr.length - 1) {
+                        row.push(td.innerText)
+                    }
+                });
+                data.push(row);
+            });
+            
+            const worksheetData = [headers, ...data];
+            const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+
+            XLSX.writeFile(workbook, "Evaluation_Management_System_data.xlsx");
+        }
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById('name').value.trim();
+            const score_1 = document.getElementById('score_1').value;
+            const score_2 = document.getElementById('score_2').value;
+            const score_3 = document.getElementById('score_3').value;
+            const score_4 = document.getElementById('score_4').value;
+            const total = (parseInt(score_1) || 0) + (parseInt(score_2) || 0) + (parseInt(score_3) || 0) + (parseInt(score_4) || 0);
+
+            const new_data = { name, score_1, score_2, score_3, score_4, total };
+
+            data.push(new_data);
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${name ? name : '-'}</td>
+                <td>${score_1 ? score_1 : '-'}</td>
+                <td>${score_2 ? score_2 : '-'}</td>
+                <td>${score_3 ? score_3 : '-'}</td>
+                <td>${score_4 ? score_4 : '-'}</td>
+                <td>${total ? total : '-'}</td>
+                <td>
+                    <button type="button" class="btn" id="edit" onclick="editRow(this)">
+                        <i class="bi bi-pencil-square"></i>  Edit
+                    </button>
+                    <button type="button" class="btn" id="delete" onclick="deleteRow(this)">
+                        <i class="bi bi-trash"></i>  Delete
+                    </button>
+                </td>
+            `;
+
+            tableBody.appendChild(row);
+
+            form.reset();
+    
+        });
+    </script>
+
+
+</body>
+</html>
