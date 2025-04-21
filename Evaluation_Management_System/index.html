@@ -62,12 +62,20 @@
             background-color: #0056b3;
             border-color: #0056b3;
         }
+
         .modal-buttons {
             display: flex;
             justify-content: center;
             gap: 10px; 
             margin-top: 50px; 
             border-radius: 20px;
+        }
+
+        #config {
+            margin-top: -20px; 
+            margin-left: 360px; 
+            border-radius: 30px;
+            padding: 10px
         }
     </style>
 
@@ -77,6 +85,11 @@
     <div class="container">
        <div class="card">
            <div class="card-body">
+
+                <button type="button" class="btn" id="config" onclick="config()">
+                    <i class="bi bi-person-fill-gear"></i>
+                </button>
+
                <h1 class="card-title">Login</h1>
                <form action="Evaluation_page.html" method="get">
                    <div class="form-group">
@@ -86,12 +99,23 @@
                        <input type="password" class="form-control" id="password" placeholder="Password" name="password" required>
                    </div>
                    <div class="modal-buttons">
-                        <button type="submit" class="btn btn-primary">Login</button>
+                        <button type="button" class="btn btn-primary" onclick="login()">Login</button>
                    </div>
-                   
                </form>
            </div>
        </div>
     </div>
+
+    <script>
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            window.location.href = 'Evaluation_page.html';  
+        }
+
+        function config() {
+            window.location.href = 'Authorizeuser_page.html';
+        }
+    </script>
 </body>
 </html>
