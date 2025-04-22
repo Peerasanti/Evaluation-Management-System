@@ -144,7 +144,14 @@
             row.innerHTML = `
               <td>${user.username}</td>
               <td>${user.password}</td>
-              <td><button>Edit</button> <button>Delete</button></td>
+              <td>
+                <button type="button" class="btn" id="edit">
+                    <i class="bi bi-pencil-square"></i>  Edit
+                </button>
+                <button type="button" class="btn" id="delete">
+                    <i class="bi bi-trash"></i>  Delete
+                </button>
+              </td>
             `;
             tableBody.appendChild(row);
           });
@@ -158,8 +165,6 @@
       script.src = 'https://script.google.com/macros/s/AKfycbwTgoaDLoklK1Wyp7sWhJfotLqvmTaies-XfZhOGXwOFn7jnkbqFvHFcUDRGf0qfjEf/exec?callback=callback';
       document.body.appendChild(script);
     });
-
-
 
     const form = document.getElementById('user-data');
 

@@ -5,19 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <title>Login Page</title>
-
     <style>
         body {
             background-color: #F5F5F5;
         }
-
         .container {
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
         }
-
         .card {
             width: 400px;
             padding: 20px;
@@ -25,20 +22,17 @@
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-
         .card-title {
             text-align: center;
             font-size: 30px;
             margin-bottom: 50px;
             font-family: 'Times New Roman', Times, serif;
         }
-
         .form-group {
             padding: 10px;
             justify-content: center;
             text-align: center;
         }
-
         input[type="text"], input[type="password"] {
             width: 100%;
             padding: 10px;
@@ -47,7 +41,6 @@
             font-size: 16px;
             font-family: 'Times New Roman', Times, serif;
         }
-
         .btn-primary {
             padding: 10px 20px;
             background-color: #007BFF;
@@ -57,64 +50,92 @@
             transition: background-color 0.3s ease, border-color 0.3s ease;
             font-family: 'Times New Roman', Times, serif;
         }
-
         .btn-primary:hover {
             background-color: #0056b3;
             border-color: #0056b3;
         }
-
         .modal-buttons {
             display: flex;
             justify-content: center;
-            gap: 10px; 
-            margin-top: 50px; 
+            gap: 10px;
+            margin-top: 50px;
             border-radius: 20px;
         }
-
         #config {
-            margin-top: -20px; 
-            margin-left: 360px; 
+            margin-top: -20px;
+            margin-left: 360px;
             border-radius: 30px;
-            padding: 10px
+            padding: 10px;
+        }
+        #loginError {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
         }
     </style>
-
 </head>
-
 <body>
     <div class="container">
-       <div class="card">
-           <div class="card-body">
-
-                <button type="button" class="btn" id="config" onclick="config()">
+        <div class="card">
+            <div class="card-body">
+                <button type="button" class="btn" id="config" onclick="handleConfigLogin()">
                     <i class="bi bi-person-fill-gear"></i>
                 </button>
-
-               <h1 class="card-title">Login</h1>
-               <form action="Evaluation_page.html" method="get">
-                   <div class="form-group">
-                       <input type="text" class="form-control" id="username" placeholder="Username" name="username" required>
-                   </div>
-                   <div class="form-group">
-                       <input type="password" class="form-control" id="password" placeholder="Password" name="password" required>
-                   </div>
-                   <div class="modal-buttons">
-                        <button type="button" class="btn btn-primary" onclick="login()">Login</button>
-                   </div>
-               </form>
-           </div>
-       </div>
+                <h1 class="card-title">Login</h1>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="username" placeholder="Username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" class="form-control" id="password" placeholder="Password" name="password" required>
+                    </div>
+                    <div class="modal-buttons">
+                        <button type="submit" class="btn btn-primary">Login</button>
+                    </div>
+                </form>
+                <p id="loginError"></p>
+            </div>
+        </div>
     </div>
 
     <script>
-        function login() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            window.location.href = 'Evaluation_page.html';  
+        function performLogin(username, password, callbackName) {
+            if (!username || !password) {
+                document.getElementById('loginError').textContent = 'Please enter both username and password';
+                return;
+            }
+
+            if (username === 'admin' && password === 'admin') {
+                window.location.href = 'Authorizeuser_page.html';
+                return;
+            }
+
+            window[callbackName] = function(response) {
+                if (response.result === 'success') {
+                    window.location.href = 'Evaluation_page.html';
+                } else {
+                    document.getElementById('loginError').textContent = response.message;
+                }
+            };
+
+            const script = document.createElement('script');
+            script.src = `https://script.google.com/macros/s/AKfycbwTgoaDLoklK1Wyp7sWhJfotLqvmTaies-XfZhOGXwOFn7jnkbqFvHFcUDRGf0qfjEf/exec?action=checkLogin&callback=${callbackName}&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
+            script.onerror = () => {
+                document.getElementById('loginError').textContent = 'Failed to connect to server';
+            };
+            document.body.appendChild(script);
         }
 
-        function config() {
-            window.location.href = 'Authorizeuser_page.html';
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            console.log(username, password);
+            performLogin(username, password, 'loginCallback');
+        });
+
+        function handleConfigLogin() {
+            performLogin('admin', 'admin', 'configCallback');
         }
     </script>
 </body>
