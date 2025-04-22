@@ -188,6 +188,8 @@
   </style>
 </head>
 <body>
+  
+
   <h1>Manage Users</h1>
 
   <div id="loading" style="display:none;">
@@ -298,28 +300,40 @@
       const loadingDiv = document.getElementById('loading');
       loadingDiv.style.display = 'block';
 
-      const safeName = username.replace(/\W/g,'_');
-      const cbName = `onDeleted_${safeName}_${Date.now()}`;
-
-      window[cbName] = function (res) {
+      fetch('https://script.google.com/macros/s/AKfycbwTgoaDLoklK1Wyp7sWhJfotLqvmTaies-XfZhOGXwOFn7jnkbqFvHFcUDRGf0qfjEf/exec', {
+        method: 'POST',
+        body: new URLSearchParams({
+          'action': 'deleteUser',
+          'username': username
+          })
+      })
+      .then(response => response.json())
+      .then(data => {
         loadingDiv.style.display = 'none';
+        if (data.result === 'success') {
+          tr.remove();
+          loadUsers();
+        } else {
+          console.error('Delete failed', data.message);
+          alert('Error: ' + data.message || data.error);
+        }
+      })
+      .catch(error => {
+        loadingDiv.style.display = 'none';
+        console.error('Delete failed', error);
+        alert('Failed to connect to server: ' + error);
+      });
+    }
 
-        if (res.result === 'success') tr.remove();
-        else console.error('Delete failed', res.message);
-
-        delete window[cbName];
-        scriptTag.remove();
-      }
-
-      const url = `https://script.google.com/macros/s/AKfycbwTgoaDLoklK1Wyp7sWhJfotLqvmTaies-XfZhOGXwOFn7jnkbqFvHFcUDRGf0qfjEf/exec` +
-                  `?action=deleteUser` +
-                  `&username=${encodeURIComponent(username)}` +
-                  `&callback=${cbName}`;
-
-      const scriptTag = document.createElement('script');
-      scriptTag.src = url;
-      document.body.appendChild(scriptTag);
-
+    function loadUsers() {
+      document.getElementById('loading').style.display = 'flex';
+      const script = document.createElement('script');
+      script.src = `https://script.google.com/macros/s/AKfycbwTgoaDLoklK1Wyp7sWhJfotLqvmTaies-XfZhOGXwOFn7jnkbqFvHFcUDRGf0qfjEf/exec?callback=callback`;
+      script.onerror = () => {
+        document.getElementById('loading').style.display = 'none';
+        alert('Failed to connect to server');
+      };
+      document.body.appendChild(script);
     }
 
 
@@ -378,7 +392,7 @@
         method: 'POST',
         body: new URLSearchParams({
           'action': 'editUser',
-          'oldUsername': currentUsername,
+          'oldUsername': editRow,
           'Username': newUsername,
           'Password': newPassword
         })
@@ -387,7 +401,6 @@
       .then(data => {
         document.getElementById('loading').style.display = 'none';
         if (data.result === 'success') {
-          alert('User updated successfully!');
           loadUsers();
         } else {
             alert('Error: ' + data.message || data.error);
