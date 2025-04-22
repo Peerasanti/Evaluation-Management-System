@@ -70,12 +70,12 @@
       background-color: #e0a800;
     }
 
-    .delete-btn {
+    .del-btn {
       background-color: #dc3545;
       color: white;
     }
 
-    .delete-btn:hover {
+    .del-btn:hover {
       background-color: #c82333;
     }
 
@@ -97,10 +97,102 @@
     tr:hover {
       background-color: #f9fcff;
     }
+
+    #loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 8px solid #ccc;
+      border-top-color: #333;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 10000;
+    }
+
+    .modal-content {
+      background-color: white;
+      width: 300px;
+      margin: 15% auto;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-content h3 {
+      margin-top: 0;
+      text-align: center;
+    }
+
+    .modal-content form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .modal-content input[type="text"], 
+    .modal-content input[type="password"] {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .modal-content button {
+      padding: 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .modal-content .save-btn {
+      background-color: #007BFF;
+      color: white;
+    }
+
+    .modal-content .save-btn:hover {
+      background-color: #0056b3;
+    }
+
+    .modal-content .cancel-btn {
+      background-color: #ccc;
+    }
+
+    .modal-content .cancel-btn:hover {
+      background-color: #bbb;
+    }
+
   </style>
 </head>
 <body>
   <h1>Manage Users</h1>
+
+  <div id="loading" style="display:none;">
+    <div class="spinner"></div>
+  </div>
 
   <div class="form-container">
     <form id="user-data" method="post" action="">
@@ -110,7 +202,9 @@
       <label for="password">Password:</label>
       <input type="password" id="password" name="Password" required>
 
-      <input type="submit" value="Submit" id="submit">
+      <button type="submit" class="btn btn-primary" id="submit">
+        <i class="bi bi-plus-circle"></i>  Add
+      </button>
     </form>
   </div>
 
@@ -130,12 +224,32 @@
     </table>
   </div>
 
+  <div id="editModal" class="modal">
+      <div class="modal-content">
+          <h3>Edit User</h3>
+          <form id="editForm">
+              <label for="editUsername">Username:</label>
+              <input type="text" id="editUsername" name="Username" required>
+
+              <label for="editPassword">Password:</label>
+              <input type="password" id="editPassword" name="Password" required>
+
+              <div style="display: flex; gap: 10px; margin-top: 10px;">
+                  <button type="submit" class="save-btn">Save</button>
+                  <button type="button" class="cancel-btn" onclick="closeModal()">Cancel</button>
+              </div>
+          </form>
+      </div>
+  </div>
+
   <script>
+    let editRow = '';
 
     document.addEventListener('DOMContentLoaded', function() {
-      // สร้างฟังก์ชัน callback
+      const loadingDiv = document.getElementById('loading');  
       window.callback = function(data) {
         if (data.result === 'success') {
+          loadingDiv.style.display = 'none';
           const tableBody = document.querySelector('#userTable tbody');
           tableBody.innerHTML = '';
 
@@ -145,32 +259,78 @@
               <td>${user.username}</td>
               <td>${user.password}</td>
               <td>
-                <button type="button" class="btn" id="edit">
+                <button data-user="${user.username}" type="button" class="edit-btn">
                     <i class="bi bi-pencil-square"></i>  Edit
                 </button>
-                <button type="button" class="btn" id="delete">
+                <button data-user="${user.username}" type="button" class="del-btn">
                     <i class="bi bi-trash"></i>  Delete
                 </button>
               </td>
             `;
             tableBody.appendChild(row);
+
+            row.querySelector('.del-btn').addEventListener('click', () => {
+              deleteUser(user.username, row);
+            });
+
+            row.querySelector('.edit-btn').addEventListener('click', () => {
+              editRow = user.username;
+              document.getElementById('editUsername').value = user.username;
+              document.getElementById('editPassword').value = user.password;
+              document.getElementById('editModal').style.display = 'flex';
+            });
           });
         } else {
+          loadingDiv.style.display = 'none';
           console.error('Error loading users:', data);
         }
       };
 
-      // เพิ่ม script tag เพื่อเรียก JSONP
+      loadingDiv.style.display = 'block';
+
       const script = document.createElement('script');
       script.src = 'https://script.google.com/macros/s/AKfycbwTgoaDLoklK1Wyp7sWhJfotLqvmTaies-XfZhOGXwOFn7jnkbqFvHFcUDRGf0qfjEf/exec?callback=callback';
       document.body.appendChild(script);
     });
+
+
+    function deleteUser(username, tr) {
+      const loadingDiv = document.getElementById('loading');
+      loadingDiv.style.display = 'block';
+
+      const safeName = username.replace(/\W/g,'_');
+      const cbName = `onDeleted_${safeName}_${Date.now()}`;
+
+      window[cbName] = function (res) {
+        loadingDiv.style.display = 'none';
+
+        if (res.result === 'success') tr.remove();
+        else console.error('Delete failed', res.message);
+
+        delete window[cbName];
+        scriptTag.remove();
+      }
+
+      const url = `https://script.google.com/macros/s/AKfycbwTgoaDLoklK1Wyp7sWhJfotLqvmTaies-XfZhOGXwOFn7jnkbqFvHFcUDRGf0qfjEf/exec` +
+                  `?action=deleteUser` +
+                  `&username=${encodeURIComponent(username)}` +
+                  `&callback=${cbName}`;
+
+      const scriptTag = document.createElement('script');
+      scriptTag.src = url;
+      document.body.appendChild(scriptTag);
+
+    }
+
 
     const form = document.getElementById('user-data');
 
     form.addEventListener('submit', function(e) {
       e.preventDefault();
       
+      const loadingDiv = document.getElementById('loading');
+      loadingDiv.style.display = 'block';
+
       const formData = new FormData(form);
       const formObj = {};
       formData.forEach((value, key) => {
@@ -186,17 +346,62 @@
       })
       .then(response => response.json())
       .then(data => {
+        loadingDiv.style.display = 'none';
+
         console.log(data);
         form.reset()
         alert('User added successfully');
         window.location.reload();
       })
       .catch(error => {
+        loadingDiv.style.display = 'none';
+
         console.error(error);
         alert('Error adding user');
       });
 
     });
+
+
+    const editForm = document.getElementById('editForm');
+
+    editForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const newUsername = formData.get('Username');
+      const newPassword = formData.get('Password');
+
+      document.getElementById('loading').style.display = 'flex';
+      document.getElementById('editModal').style.display = 'none';
+
+      fetch('https://script.google.com/macros/s/AKfycbwTgoaDLoklK1Wyp7sWhJfotLqvmTaies-XfZhOGXwOFn7jnkbqFvHFcUDRGf0qfjEf/exec', {
+        method: 'POST',
+        body: new URLSearchParams({
+          'action': 'editUser',
+          'oldUsername': currentUsername,
+          'Username': newUsername,
+          'Password': newPassword
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('loading').style.display = 'none';
+        if (data.result === 'success') {
+          alert('User updated successfully!');
+          loadUsers();
+        } else {
+            alert('Error: ' + data.message || data.error);
+        }
+      })
+      .catch(error => {
+        document.getElementById('loading').style.display = 'none';
+        alert('Failed to connect to server: ' + error);
+      });
+    });
+
+    function closeModal() {
+      document.getElementById('editModal').style.display = 'none';
+    }
 
   </script>
 </body>
