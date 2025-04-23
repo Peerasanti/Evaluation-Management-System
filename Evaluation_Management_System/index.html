@@ -154,6 +154,7 @@
             }
 
             if (username === 'admin' && password === 'admin') {
+                localStorage.setItem('username', 'admin');
                 window.location.href = 'Authorizeuser_page.html';
                 return;
             }
@@ -161,6 +162,7 @@
             window[callbackName] = function(response) {
                 if (response.result === 'success') {
                     loadingDiv.style.display = 'none';
+                    localStorage.setItem('username', username);
                     window.location.href = 'Evaluation_page.html';
                 } else {
                     loadingDiv.style.display = 'none';

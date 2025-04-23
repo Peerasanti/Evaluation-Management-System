@@ -179,6 +179,32 @@
             background-color: #c82333; 
         }
 
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 8px solid #ccc;
+            border-top-color: #333;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+
     </style>
 
 
@@ -186,12 +212,16 @@
 <body>
     <div class="container">
         <div id="back">
-            <button type="button" class="btn" id="config" onclick="window.location.href = 'index.html';"> Logout </button>
+            <button type="button" class="btn" id="config" onclick="logout()"> Logout </button>
         </div>
 
         <h1 class="title">
-            <i class="bi bi-wrench-adjustable-circle"></i>  Evaluation Management System
+            <i class="bi bi-wrench-adjustable-circle"></i> Evaluation Management System
         </h1>
+
+        <div id="loading" style="display:none;">
+            <div class="spinner"></div>
+        </div>
 
         <div id="modalBackdrop" class="backdrop"></div>
 
@@ -209,14 +239,14 @@
         </div>
 
         <div class="form-score">
-            <form class="form" action="index.html" method="post" id="score-form">
-                <input type="text" name="username" placeholder="Add Name" id="name" class="name" required>
+            <form class="form" id="score-form">
+                <input type="text" name="assesseeName" placeholder="Add Name" id="name" class="name" required>
                 <input type="number" name="score_1" placeholder="Score 1" id="score_1" class="score">
                 <input type="number" name="score_2" placeholder="Score 2" id="score_2" class="score">
                 <input type="number" name="score_3" placeholder="Score 3" id="score_3" class="score">
                 <input type="number" name="score_4" placeholder="Score 4" id="score_4" class="score">
                 <button type="submit" class="btn btn-primary" id="submit">
-                    <i class="bi bi-plus-circle"></i>  Add
+                    <i class="bi bi-plus-circle"></i> Add
                 </button>
             </form>
 
@@ -242,73 +272,206 @@
                     </tr>
                 </thead>
                 <tbody id="table-body">
-
                 </tbody>
             </table>
-
-
         </div>
     </div>
 
     <script>
-
-        const data = [];
-
         const form = document.getElementById('score-form');
         const tableBody = document.getElementById('table-body');
 
         document.getElementById('csv').onclick = downloadCSV;
         document.getElementById('excel').onclick = downloadExcel;
 
-        function deleteRow(button) {
-            const row = button.parentNode.parentNode;
-            tableBody.removeChild(row);
+        let editingAssessorUsername = null;
+        let editingOriginalAssesseeName = null;
+        let currentUsername = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            currentUsername = localStorage.getItem('username');
+            if (!currentUsername) {
+                alert('Please login first');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            loadAssessments();
+        });
+
+        function logout() {
+            localStorage.removeItem('username');
+            window.location.href = 'index.html';
         }
 
-        let editingRow = null;
-        function editRow(button) {
-            editingRow = button.parentNode.parentNode;
-            const cells = editingRow.querySelectorAll('td');
+        function loadAssessments() {
+            document.getElementById('loading').style.display = 'flex';
+            fetch('https://script.google.com/macros/s/AKfycbwTgoaDLoklK1Wyp7sWhJfotLqvmTaies-XfZhOGXwOFn7jnkbqFvHFcUDRGf0qfjEf/exec?action=getAssessments')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('loading').style.display = 'none';
+                    if (data.result === 'success') {
+                        tableBody.innerHTML = '';
+                        data.assessments.forEach(assessment => {
+                            if (assessment.AssessorUsername === currentUsername) {
+                                const row = document.createElement('tr');
+                                row.setAttribute('data-assessor', assessment.AssessorUsername);
+                                row.setAttribute('data-assessee', assessment.AssesseeName);
+                                row.innerHTML = `
+                                    <td>${assessment.AssesseeName || '-'}</td>
+                                    <td>${assessment.Score1 || '-'}</td>
+                                    <td>${assessment.Score2 || '-'}</td>
+                                    <td>${assessment.Score3 || '-'}</td>
+                                    <td>${assessment.Score4 || '-'}</td>
+                                    <td>${assessment.TotalScore || '-'}</td>
+                                    <td>
+                                        <button type="button" class="btn" onclick="editRow(this)">
+                                            <i class="bi bi-pencil-square"></i> Edit
+                                        </button>
+                                        <button type="button" class="btn" onclick="deleteRow(this)">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </button>
+                                    </td>
+                                `;
+                                tableBody.appendChild(row);
+                            }
+                        });
+                    } else {
+                        alert('Error loading assessments: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Failed to load assessments: ' + error);
+                });
+        }
 
-            document.getElementById('edit-name').value = cells[0].textContent;
-            document.getElementById('edit-score1').value = cells[1].textContent;
-            document.getElementById('edit-score2').value = cells[2].textContent;
-            document.getElementById('edit-score3').value = cells[3].textContent;
-            document.getElementById('edit-score4').value = cells[4].textContent;
+        form.addEventListener('submit', (e) => {
+            document.getElementById('loading').style.display = 'flex';
+            e.preventDefault();
+
+            const assesseeName = document.getElementById('name').value.trim();
+            const score_1 = document.getElementById('score_1').value;
+            const score_2 = document.getElementById('score_2').value;
+            const score_3 = document.getElementById('score_3').value;
+            const score_4 = document.getElementById('score_4').value;
+
+            fetch('https://script.google.com/macros/s/AKfycbwTgoaDLoklK1Wyp7sWhJfotLqvmTaies-XfZhOGXwOFn7jnkbqFvHFcUDRGf0qfjEf/exec', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    'action': 'addAssessment',
+                    'AssessorUsername': currentUsername, 
+                    'AssesseeName': assesseeName,
+                    'Score1': score_1,
+                    'Score2': score_2,
+                    'Score3': score_3,
+                    'Score4': score_4
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                if (data.result === 'success') {
+                    form.reset();
+                    loadAssessments(); 
+                } else {
+                    alert('Error adding assessment: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Failed to add assessment: ' + error);
+            });
+        });
+
+        function deleteRow(button) {
+            document.getElementById('loading').style.display = 'flex';
+            const row = button.parentNode.parentNode;
+            const assessorUsername = row.getAttribute('data-assessor');
+            const assesseeName = row.getAttribute('data-assessee');
+
+            fetch('https://script.google.com/macros/s/AKfycbwTgoaDLoklK1Wyp7sWhJfotLqvmTaies-XfZhOGXwOFn7jnkbqFvHFcUDRGf0qfjEf/exec', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    'action': 'deleteAssessment',
+                    'AssessorUsername': assessorUsername,
+                    'AssesseeName': assesseeName
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                if (data.result === 'success') {
+                    loadAssessments(); 
+                } else {
+                    alert('Error deleting assessment: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Failed to delete assessment: ' + error);
+            });
+        }
+
+        function editRow(button) {
+            const row = button.parentNode.parentNode;
+            editingAssessorUsername = row.getAttribute('data-assessor');
+            editingOriginalAssesseeName = row.getAttribute('data-assessee');
+            const cells = row.querySelectorAll('td');
+
+            document.getElementById('edit-name').value = cells[0].textContent === '-' ? '' : cells[0].textContent;
+            document.getElementById('edit-score1').value = cells[1].textContent === '-' ? '' : cells[1].textContent;
+            document.getElementById('edit-score2').value = cells[2].textContent === '-' ? '' : cells[2].textContent;
+            document.getElementById('edit-score3').value = cells[3].textContent === '-' ? '' : cells[3].textContent;
+            document.getElementById('edit-score4').value = cells[4].textContent === '-' ? '' : cells[4].textContent;
 
             document.getElementById('editModal').style.display = 'block';
             document.getElementById('modalBackdrop').style.display = 'block';
         }
 
         function saveEdit() {
-            const name = document.getElementById('edit-name').value || "-";
-            const score_1 = document.getElementById('edit-score1').value || "-";
-            const score_2 = document.getElementById('edit-score2').value || "-";
-            const score_3 = document.getElementById('edit-score3').value || "-";
-            const score_4 = document.getElementById('edit-score4').value || "-";
+            document.getElementById('loading').style.display = 'flex';
+            const assesseeName = document.getElementById('edit-name').value;
+            const score_1 = document.getElementById('edit-score1').value;
+            const score_2 = document.getElementById('edit-score2').value;
+            const score_3 = document.getElementById('edit-score3').value;
+            const score_4 = document.getElementById('edit-score4').value;
 
-            if(editingRow) {
-                const cells = editingRow.querySelectorAll('td');
-                cells[0].textContent = name;
-                cells[1].textContent = score_1;
-                cells[2].textContent = score_2;
-                cells[3].textContent = score_3;
-                cells[4].textContent = score_4;
-
-                const total = (parseInt(score_1) || 0) + (parseInt(score_2) || 0) + (parseInt(score_3) || 0) + (parseInt(score_4) || 0);
-                cells[5].textContent = total || "-";
-            }
-            closeModal();
+            fetch('https://script.google.com/macros/s/AKfycbwTgoaDLoklK1Wyp7sWhJfotLqvmTaies-XfZhOGXwOFn7jnkbqFvHFcUDRGf0qfjEf/exec', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    'action': 'editAssessment',
+                    'AssessorUsername': editingAssessorUsername,
+                    'OriginalAssesseeName': editingOriginalAssesseeName,
+                    'AssesseeName': assesseeName,
+                    'Score1': score_1,
+                    'Score2': score_2,
+                    'Score3': score_3,
+                    'Score4': score_4
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                if (data.result === 'success') {
+                    closeModal();
+                    loadAssessments(); 
+                } else {
+                    alert('Error editing assessment: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Failed to edit assessment: ' + error);
+            });
         }
 
         function closeModal() {
             document.getElementById('editModal').style.display = 'none';
             document.getElementById('modalBackdrop').style.display = 'none';
+            editingAssessorUsername = null;
+            editingOriginalAssesseeName = null;
         }
 
         function downloadCSV() {
             const table = document.querySelector('.table');
-            let csv = []
+            let csv = [];
             
             const headers = table.querySelectorAll('thead th');
             let headerRow = [];
@@ -347,7 +510,7 @@
 
             table.querySelectorAll('thead th').forEach((th, index, arr) => {
                 if (index !== arr.length - 1) {
-                    headers.push(th.innerText)
+                    headers.push(th.innerText);
                 }
             });
 
@@ -355,8 +518,8 @@
             table.querySelectorAll('tbody tr').forEach(tr => {
                 const row = [];
                 tr.querySelectorAll('td').forEach((td, index, arr) => {
-                    if(index !== arr.length - 1) {
-                        row.push(td.innerText)
+                    if (index !== arr.length - 1) {
+                        row.push(td.innerText);
                     }
                 });
                 data.push(row);
@@ -370,46 +533,8 @@
 
             XLSX.writeFile(workbook, "Evaluation_Management_System_data.xlsx");
         }
-
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-
-            const name = document.getElementById('name').value.trim();
-            const score_1 = document.getElementById('score_1').value;
-            const score_2 = document.getElementById('score_2').value;
-            const score_3 = document.getElementById('score_3').value;
-            const score_4 = document.getElementById('score_4').value;
-            const total = (parseInt(score_1) || 0) + (parseInt(score_2) || 0) + (parseInt(score_3) || 0) + (parseInt(score_4) || 0);
-
-            const new_data = { name, score_1, score_2, score_3, score_4, total };
-
-            data.push(new_data);
-
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${name ? name : '-'}</td>
-                <td>${score_1 ? score_1 : '-'}</td>
-                <td>${score_2 ? score_2 : '-'}</td>
-                <td>${score_3 ? score_3 : '-'}</td>
-                <td>${score_4 ? score_4 : '-'}</td>
-                <td>${total ? total : '-'}</td>
-                <td>
-                    <button type="button" class="btn" id="edit" onclick="editRow(this)">
-                        <i class="bi bi-pencil-square"></i>  Edit
-                    </button>
-                    <button type="button" class="btn" id="delete" onclick="deleteRow(this)">
-                        <i class="bi bi-trash"></i>  Delete
-                    </button>
-                </td>
-            `;
-
-            tableBody.appendChild(row);
-
-            form.reset();
-    
-        });
     </script>
 
-
+    
 </body>
 </html>
