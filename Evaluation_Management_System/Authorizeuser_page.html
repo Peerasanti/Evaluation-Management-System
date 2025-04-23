@@ -288,7 +288,7 @@
         }
       };
 
-      loadingDiv.style.display = 'block';
+      loadingDiv.style.display = 'flex';
 
       const script = document.createElement('script');
       script.src = 'https://script.google.com/macros/s/AKfycbwTgoaDLoklK1Wyp7sWhJfotLqvmTaies-XfZhOGXwOFn7jnkbqFvHFcUDRGf0qfjEf/exec?callback=callback';
@@ -298,7 +298,7 @@
 
     function deleteUser(username, tr) {
       const loadingDiv = document.getElementById('loading');
-      loadingDiv.style.display = 'block';
+      loadingDiv.style.display = 'flex';
 
       fetch('https://script.google.com/macros/s/AKfycbwTgoaDLoklK1Wyp7sWhJfotLqvmTaies-XfZhOGXwOFn7jnkbqFvHFcUDRGf0qfjEf/exec', {
         method: 'POST',
@@ -343,7 +343,7 @@
       e.preventDefault();
       
       const loadingDiv = document.getElementById('loading');
-      loadingDiv.style.display = 'block';
+      loadingDiv.style.display = 'flex';
 
       const formData = new FormData(form);
       const formObj = {};
