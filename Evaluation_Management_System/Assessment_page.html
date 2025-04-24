@@ -1,11 +1,548 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Overview Assessment Information</title>
-</head>
-<body>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Overview Assessment Information</title>
+        <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
     
+        <style>
+            /* General Styling */
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #f4f7fa;
+                margin: 0;
+                padding: 0;
+            }
+    
+            .container {
+                max-width: 1200px;
+                margin: 20px auto;
+                padding: 20px;
+                background: #ffffff;
+                border-radius: 10px;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            }
+    
+            /* Header Styling */
+            h1 {
+                text-align: center;
+                color: #2c3e50;
+                margin-bottom: 30px;
+                font-size: 2rem;
+            }
+
+            #config {
+                background-color: #e74c3c;
+                color: white;
+            }
+
+            #config:hover {
+                background-color: #c0392b;
+                transform: translateY(-2px);
+            }
+    
+            /* Button Styling */
+            .btn, .export, .back, .btn-save, .btn-cancel, .edit-btn, .del-btn{
+                padding: 10px 15px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 14px;
+                transition: background-color 0.3s, transform 0.1s;
+            }
+    
+            .btn {
+                background-color: #3498db;
+                color: white;
+                margin-right: 5px;
+            }
+    
+            .btn:hover {
+                background-color: #2980b9;
+                transform: translateY(-2px);
+            }
+
+            .edit-btn {
+            background-color: #ffc107;
+            color: white;
+            }
+
+            .edit-btn:hover {
+                background-color: #e0a800;
+                transform: translateY(-2px);
+            }
+
+            .del-btn {
+                background-color: #e74c3c;
+                color: white;
+            }
+
+            .del-btn:hover {
+                background-color: #c0392b;
+                transform: translateY(-2px);
+            }
+    
+            .back {
+                background-color: #7f8c8d;
+                color: white;
+            }
+    
+            .back:hover {
+                background-color: #6c7a89;
+            }
+    
+            .export {
+                background-color: #2ecc71;
+                color: white;
+                margin: 0 5px;
+            }
+    
+            .export:hover {
+                background-color: #27ae60;
+            }
+    
+            .btn-save {
+                background-color: #3498db;
+                color: white;
+            }
+    
+            .btn-save:hover {
+                background-color: #2980b9;
+            }
+    
+            .btn-cancel {
+                background-color: #7f8c8d;
+                color: white;
+            }
+    
+            .btn-cancel:hover {
+                background-color: #6c7a89;
+            }
+    
+            /* Button Container */
+            .button-container {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+    
+            #back {
+                text-align: right;
+            }
+    
+            /* Export Buttons */
+            .export-buttons {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+    
+            /* Table Styling */
+            .table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+    
+            .table th, .table td {
+                padding: 12px;
+                text-align: left;
+                border-bottom: 1px solid #e0e0e0;
+            }
+    
+            .table th {
+                background-color: #3498db;
+                color: white;
+                font-weight: 600;
+            }
+    
+            .table tr:hover {
+                background-color: #f8f9fa;
+            }
+    
+            .table-primary {
+                background-color: #3498db;
+            }
+    
+            /* Modal Styling */
+            #editModal {
+                display: none;
+                position: fixed;
+                top: 30%;
+                left: 50%;
+                transform: translate(-50%, -30%);
+                background: #fff;
+                padding: 30px;
+                border-radius: 8px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+                z-index: 1000;
+                width: 400px;
+                max-width: 90%;
+            }
+    
+            #editModal input {
+                width: 100%;
+                padding: 10px;
+                margin-bottom: 15px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                font-size: 14px;
+            }
+    
+            #editModal input:focus {
+                outline: none;
+                border-color: #3498db;
+                box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+            }
+    
+            #editModal h3 {
+                margin-top: 0;
+                color: #2c3e50;
+            }
+    
+            /* Loading Spinner */
+            #loading {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                display: none;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+            }
+    
+            .spinner {
+                width: 60px;
+                height: 60px;
+                border: 8px solid #e0e0e0;
+                border-top-color: #3498db;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
+    
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+    
+            /* Backdrop */
+            .backdrop {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                display: none;
+                z-index: 99;
+            }
+    
+            /* Modal Buttons */
+            .modal-buttons {
+                display: flex;
+                justify-content: center;
+                gap: 10px;
+                margin-top: 10px;
+            }
+    
+            /* Responsive Design */
+            @media (max-width: 768px) {
+                .container {
+                    margin: 10px;
+                    padding: 15px;
+                }
+    
+                h1 {
+                    font-size: 1.5rem;
+                }
+    
+                .table th, .table td {
+                    padding: 8px;
+                    font-size: 14px;
+                }
+    
+                .btn, .export, .back, .btn-save, .btn-cancel {
+                    padding: 8px 12px;
+                    font-size: 12px;
+                }
+    
+                #editModal {
+                    width: 90%;
+                    padding: 20px;
+                }
+            }
+        </style>
+    </head>
+
+<body>
+    <div class="container">
+
+        <div id="back">
+            <button type="button" class="back" onclick="window.location.href = 'Authorizeuser_page.html'">Back</button>
+            <button type="button" class="btn" id="config" onclick="logout()"> Logout </button>
+        </div>
+
+        <h1>Overview Assessment Information</h1>
+
+        <div id="loading" style="display:none;">
+            <div class="spinner"></div>
+        </div>
+
+        <div class="export-buttons">
+            <button type="button" class="export" id="excel" onclick="downloadExcel()">
+                <i class="bi bi-file-earmark-excel"></i> Export to Excel
+            </button>
+            <button type="button" class="export" id="csv" onclick="downloadCSV()">
+                <i class="bi bi-file-earmark-spreadsheet"></i> Export to CSV
+            </button> 
+        </div> 
+
+        <div id="modalBackdrop" class="backdrop"></div>
+
+        <div id="editModal">
+            <h3 style="text-align: center;">Edit Row</h3>
+            <input type="text" id="edit-name" placeholder="Name"><br><br>
+            <input type="number" id="edit-score1" placeholder="Score 1"><br><br>
+            <input type="number" id="edit-score2" placeholder="Score 2"><br><br>
+            <input type="number" id="edit-score3" placeholder="Score 3"><br><br>
+            <input type="number" id="edit-score4" placeholder="Score 4"><br><br>
+            <div class="modal-buttons">
+                <button class="btn-save" onclick="saveEdit()">Save</button>
+                <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+
+        <table class="table">
+            <thead class="table-primary">
+                <tr>
+                    <th>Assesor Usernsme</th>
+                    <th scope="col">Assessee Name</th>
+                    <th scope="col">Score 1</th>
+                    <th scope="col">Score 2</th>
+                    <th scope="col">Score 3</th>
+                    <th scope="col">Score 4</th>
+                    <th scope="col">Total</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const tableBody = document.getElementById('table-body');
+
+        function logout() {
+            localStorage.removeItem('username');
+            window.location.href = 'index.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            currentUsername = localStorage.getItem('username');
+            if (!currentUsername) {
+                alert('Please login first');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            loadAssessments();
+        });
+
+        function loadAssessments() {
+            document.getElementById('loading').style.display = 'flex';
+            fetch('https://script.google.com/macros/s/AKfycbwTgoaDLoklK1Wyp7sWhJfotLqvmTaies-XfZhOGXwOFn7jnkbqFvHFcUDRGf0qfjEf/exec?action=getAssessments')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('loading').style.display = 'none';
+                    if (data.result === 'success') {
+                        tableBody.innerHTML = '';
+                        data.assessments.forEach(assessment => {
+                            const row = document.createElement('tr');
+                            row.setAttribute('data-assessor', assessment.AssessorUsername);
+                            row.setAttribute('data-assessee', assessment.AssesseeName);
+                            row.innerHTML = `
+                                <td>${assessment.AssessorUsername || '-'}</td>
+                                <td>${assessment.AssesseeName || '-'}</td>
+                                <td>${assessment.Score1 || '-'}</td> 
+                                <td>${assessment.Score2 || '-'}</td>
+                                <td>${assessment.Score3 || '-'}</td>
+                                <td>${assessment.Score4 || '-'}</td>
+                                <td>${assessment.TotalScore || '-'}</td>
+                                <td>
+                                    <button type="button" class="edit-btn" onclick="editRow(this)">
+                                        <i class="bi bi-pencil-square"></i> Edit
+                                    </button>
+                                    <button type="button" class="del-btn" onclick="deleteRow(this)">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                </td>
+                                `;
+                            tableBody.appendChild(row);
+                        });
+                    } else {
+                        alert('Error loading assessments: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Failed to load assessments: ' + error);
+                });
+        }
+
+        function deleteRow(button) {
+            document.getElementById('loading').style.display = 'flex';
+            const row = button.parentNode.parentNode;
+            const assessorUsername = row.getAttribute('data-assessor');
+            const assesseeName = row.getAttribute('data-assessee');
+
+            fetch('https://script.google.com/macros/s/AKfycbwTgoaDLoklK1Wyp7sWhJfotLqvmTaies-XfZhOGXwOFn7jnkbqFvHFcUDRGf0qfjEf/exec', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    'action': 'deleteAssessment',
+                    'AssessorUsername': assessorUsername,
+                    'AssesseeName': assesseeName
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                if (data.result === 'success') {
+                    loadAssessments(); 
+                } else {
+                    alert('Error deleting assessment: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Failed to delete assessment: ' + error);
+            });
+        }
+
+        function editRow(button) {
+            const row = button.parentNode.parentNode;
+            editingAssessorUsername = row.getAttribute('data-assessor');
+            editingOriginalAssesseeName = row.getAttribute('data-assessee');
+            const cells = row.querySelectorAll('td');
+
+            document.getElementById('edit-name').value = cells[1].textContent === '-' ? '' : cells[1].textContent;
+            document.getElementById('edit-score1').value = cells[2].textContent === '-' ? '' : cells[2].textContent;
+            document.getElementById('edit-score2').value = cells[3].textContent === '-' ? '' : cells[3].textContent;
+            document.getElementById('edit-score3').value = cells[4].textContent === '-' ? '' : cells[4].textContent;
+            document.getElementById('edit-score4').value = cells[5].textContent === '-' ? '' : cells[5].textContent;
+
+            document.getElementById('editModal').style.display = 'block';
+            document.getElementById('modalBackdrop').style.display = 'block';
+        }
+
+        function saveEdit() {
+            document.getElementById('loading').style.display = 'flex';
+            const assesseeName = document.getElementById('edit-name').value;
+            const score_1 = document.getElementById('edit-score1').value;
+            const score_2 = document.getElementById('edit-score2').value;
+            const score_3 = document.getElementById('edit-score3').value;
+            const score_4 = document.getElementById('edit-score4').value;
+
+            fetch('https://script.google.com/macros/s/AKfycbwTgoaDLoklK1Wyp7sWhJfotLqvmTaies-XfZhOGXwOFn7jnkbqFvHFcUDRGf0qfjEf/exec', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    'action': 'editAssessment',
+                    'AssessorUsername': editingAssessorUsername,
+                    'OriginalAssesseeName': editingOriginalAssesseeName,
+                    'AssesseeName': assesseeName,
+                    'Score1': score_1,
+                    'Score2': score_2,
+                    'Score3': score_3,
+                    'Score4': score_4
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                if (data.result === 'success') {
+                    closeModal();
+                    loadAssessments(); 
+                } else {
+                    alert('Error editing assessment: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Failed to edit assessment: ' + error);
+            });
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').style.display = 'none';
+            document.getElementById('modalBackdrop').style.display = 'none';
+            editingAssessorUsername = null;
+            editingOriginalAssesseeName = null;
+        }
+
+        function downloadCSV() {
+            const table = document.querySelector('.table');
+            let csv = [];
+            
+            const headers = table.querySelectorAll('thead th');
+            let headerRow = [];
+            headers.forEach((header, index) => {
+                if (index !== headers.length - 1) {
+                    headerRow.push(header.innerText.replace(/,/g, ''));
+                }
+            });
+            csv.push(headerRow.join(','));
+
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach((row) => {
+                let rowData = [];
+                const cells = row.querySelectorAll('td');
+                cells.forEach((cell, index) => {
+                    if (index != cells.length - 1) {
+                        rowData.push(cell.innerText.replace(/,/g, ''));
+                    }
+                });
+                csv.push(rowData.join(','));
+            });
+
+            const csvFile = new Blob([csv.join('\n')], { type: 'text/csv' });
+            const downloadLink = document.createElement('a');
+            downloadLink.href = URL.createObjectURL(csvFile);
+            downloadLink.download = 'Evaluation_Management_System_data.csv';
+            downloadLink.style.display = 'none';
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        }
+
+        function downloadExcel() {
+            const table = document.querySelector('.table');
+            const headers = [];
+
+            table.querySelectorAll('thead th').forEach((th, index, arr) => {
+                if (index !== arr.length - 1) {
+                    headers.push(th.innerText);
+                }
+            });
+
+            const data = [];
+            table.querySelectorAll('tbody tr').forEach(tr => {
+                const row = [];
+                tr.querySelectorAll('td').forEach((td, index, arr) => {
+                    if (index !== arr.length - 1) {
+                        row.push(td.innerText);
+                    }
+                });
+                data.push(row);
+            });
+            
+            const worksheetData = [headers, ...data];
+            const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+
+            XLSX.writeFile(workbook, "Evaluation_Management_System_data.xlsx");
+        }
+    </script>
 </body>
 </html>
