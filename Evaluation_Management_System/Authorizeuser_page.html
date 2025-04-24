@@ -16,7 +16,7 @@
       color: #333;
     }
 
-    .form-container, .table-container {
+    .form-container, .table-container, .export-container {
       max-width: 800px;
       margin: 0 auto 30px;
       background-color: white;
@@ -185,6 +185,7 @@
       background-color: #bbb;
     }
 
+
   </style>
 </head>
 <body>
@@ -212,14 +213,19 @@
     </form>
   </div>
 
+  <div class="export-container">
+    <button type="button" class="assessment" onclick="window.location.href = 'Assessment_page.html'">Overview Assessment Information</button>
+  </div>
+
+
   <div class="table-container">
-    <h3>Users Table</h3>
+    <h3>Users Information Table</h3>
     <table id="userTable">
       <thead>
         <tr>
           <th>Username</th>
           <th>Password</th>
-          <th>Manage</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody>
