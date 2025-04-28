@@ -7,315 +7,416 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
         <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
         <style>
-            /* General Styling */
+            /* MODIFIED: General Styling */
             body {
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                background-color: #f4f7fa;
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; /* ใช้ฟอนต์ Inter */
+                background: linear-gradient(135deg, #f0f4f8 0%, #e4e9f0 100%); /* Gradient พื้นหลัง */
                 margin: 0;
-                padding: 30px;
+                padding: 40px 20px; /* ปรับ padding */
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
             }
-    
-            /* Container Styling */
+
+            /* MODIFIED: Container Styling */
             .container {
                 max-width: 1200px;
-                margin: 20px auto;
-                padding: 20px;
+                width: 100%;
+                margin: 30px auto; /* ปรับ margin */
+                padding: 30px; /* เพิ่ม padding */
                 background: #ffffff;
-                border-radius: 10px;
-                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+                border-radius: 12px; /* มุมโค้งมากขึ้น */
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08); /* Shadow นุ่มนวล */
+                transition: transform 0.3s ease, box-shadow 0.3s ease; /* เพิ่ม animation */
             }
-    
-            /* Title Styling */
+
+            .container:hover {
+                transform: translateY(-4px); /* ยกขึ้นเมื่อ hover */
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+            }
+
+            /* MODIFIED: Title Styling */
             .title {
                 text-align: center;
-                color: #2c3e50;
-                font-size: 2rem;
-                font-weight: 600;
-                margin-bottom: 30px;
+                color: #1a2b4b; /* สีน้ำเงินเข้ม */
+                font-size: 2.25rem; /* ขนาดใหญ่ขึ้น */
+                font-weight: 700;
+                margin-bottom: 40px;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* เพิ่ม shadow */
             }
-    
-            /* Form Styling */
+
+            /* MODIFIED: Form Styling */
             .form-score {
                 max-width: 900px;
                 margin: 0 auto;
             }
-    
+
             .form {
                 display: flex;
                 flex-wrap: nowrap;
                 justify-content: center;
                 align-items: center;
-                gap: 10px;
-                margin-bottom: 20px;
+                gap: 15px; /* ปรับ gap */
+                margin-bottom: 30px; /* เพิ่มระยะห่าง */
             }
-    
+
             input[type="text"], input[type="number"] {
-                padding: 10px;
-                border: 1px solid #ccc;
-                border-radius: 5px;
-                font-size: 14px;
+                padding: 12px; /* ปรับ padding */
+                border: 1px solid #d1d9e6; /* ขอบสีอ่อน */
+                border-radius: 8px; /* มุมโค้ง */
+                font-size: 0.95rem;
+                background: #fafafa; /* พื้นหลังอ่อน */
+                transition: border-color 0.3s ease, box-shadow 0.3s ease;
             }
-    
+
             input[type="text"]:focus, input[type="number"]:focus {
                 outline: none;
-                border-color: #3498db;
-                box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+                border-color: #3b82f6; /* สีน้ำเงินเมื่อ focus */
+                box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+                background: #ffffff;
             }
-    
+
             #name {
                 width: 300px;
             }
-    
+
             .score {
                 width: 70px;
             }
-    
-            /* Button Styling */
+
+            /* MODIFIED: Button Styling */
             .btn, .btn-primary, .btn-save, .btn-cancel, .export, #edit, #delete {
-                padding: 10px 15px;
+                padding: 12px 20px; /* ปรับขนาด */
                 border: none;
-                border-radius: 5px;
+                border-radius: 8px; /* มุมโค้ง */
                 cursor: pointer;
-                font-size: 14px;
-                transition: background-color 0.3s, transform 0.1s;
+                font-size: 0.95rem;
+                font-weight: 500;
+                transition: all 0.3s ease; /* รวม transform และ background */
+                display: inline-flex;
+                align-items: center;
+                gap: 6px; /* ระยะห่างไอคอนและข้อความ */
             }
-    
+
             .btn-primary, #submit {
-                background-color: #3498db;
+                background: linear-gradient(90deg, #3b82f6, #60a5fa); /* Gradient น้ำเงิน */
                 color: white;
-                padding: 10px;
-                width: 70px;
+                padding: 12px; /* ปรับให้สอดคล้อง */
+                width: 80px; /* ปรับความกว้าง */
+                box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
             }
-    
+
             .btn-primary:hover, #submit:hover {
-                background-color: #2980b9;
+                background: linear-gradient(90deg, #2563eb, #3b82f6);
                 transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
             }
-    
+
             #edit {
-                background-color: #ffc107;
+                background: linear-gradient(90deg, #f59e0b, #fbbf24); /* Gradient เหลือง */
                 color: white;
                 margin-right: 5px;
             }
-    
+
             #edit:hover {
-                background-color: #e0a800;
+                background: linear-gradient(90deg, #d97706, #f59e0b);
                 transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
             }
-    
+
             #delete {
-                background-color: #e74c3c;
+                background: linear-gradient(90deg, #ef4444, #f87171); /* Gradient แดง */
                 color: white;
             }
-    
+
             #delete:hover {
-                background-color: #c0392b;
+                background: linear-gradient(90deg, #dc2626, #ef4444);
                 transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
             }
-    
+
             .btn-save {
-                background-color: #3498db;
+                background: linear-gradient(90deg, #3b82f6, #60a5fa); /* Gradient น้ำเงิน */
                 color: white;
             }
-    
+
             .btn-save:hover {
-                background-color: #2980b9;
+                background: linear-gradient(90deg, #2563eb, #3b82f6);
                 transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
             }
-    
+
             .btn-cancel {
-                background-color: #e74c3c;
+                background: linear-gradient(90deg, #ef4444, #f87171); /* Gradient แดง */
                 color: white;
             }
-    
+
             .btn-cancel:hover {
-                background-color: #c0392b;
+                background: linear-gradient(90deg, #dc2626, #ef4444);
                 transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
             }
-    
+
             .export {
-                background-color: #2ecc71;
+                background: linear-gradient(90deg, #10b981, #34d399); /* Gradient เขียว */
                 color: white;
-                padding: 10px 20px;
+                padding: 12px 24px; /* ปรับ padding */
             }
-    
+
             .export:hover {
-                background-color: #27ae60;
+                background: linear-gradient(90deg, #059669, #10b981);
                 transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
             }
-    
-            /* Logout Button */
+
+            /* MODIFIED: Logout Button */
             #back {
                 text-align: right;
-                margin-bottom: 20px;
+                margin-bottom: 30px;
+                width: 100%;
+                max-width: 1200px; /* จัดให้ตรงกับ container */
             }
-    
+
             #config {
-                background-color: #e74c3c;
+                background: linear-gradient(90deg, #ef4444, #f87171); /* Gradient แดง */
                 color: white;
+                padding: 12px 20px;
+                font-size: 0.95rem;
+                border-radius: 8px;
             }
-    
+
             #config:hover {
-                background-color: #c0392b;
+                background: linear-gradient(90deg, #dc2626, #ef4444);
                 transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
             }
-    
-            /* Table Styling */
+
+            /* MODIFIED: Table Styling */
             .table {
                 width: 100%;
-                border-collapse: collapse;
+                border-collapse: separate;
+                border-spacing: 0;
                 margin-top: 20px;
-                background-color: #ffffff;
+                background: #ffffff;
+                border-radius: 10px;
+                overflow: hidden; /* เพื่อมุมโค้ง */
             }
-    
+
             .table th, .table td {
-                padding: 12px;
+                padding: 14px 16px; /* ปรับ padding */
                 text-align: center;
-                border-bottom: 1px solid #e0e0e0;
+                border-bottom: 1px solid #e5e7eb; /* ขอบสีอ่อน */
+                font-size: 0.9rem;
+                color: #374151; /* สีข้อความเข้ม */
             }
-    
+
             .table th {
-                background-color: #3498db;
+                background: linear-gradient(90deg, #3b82f6, #60a5fa); /* Gradient น้ำเงิน */
                 color: white;
                 font-weight: 600;
+                font-size: 0.95rem;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
             }
-    
+
+            .table tr:last-child td {
+                border-bottom: none; /* ลบขอบล่างของแถวสุดท้าย */
+            }
+
             .table tr:hover {
-                background-color: #f8f9fa;
+                background: #f1f5f9; /* สีพื้นหลังเมื่อ hover */
             }
-    
+
             .table-primary {
-                background-color: #3498db;
+                background: linear-gradient(90deg, #3b82f6, #60a5fa); /* Gradient น้ำเงิน */
             }
-    
-            /* Export Buttons */
+
+            /* MODIFIED: Export Buttons */
             .export-buttons {
                 display: flex;
                 justify-content: center;
-                gap: 10px;
-                margin: 20px 0;
+                gap: 15px; /* ปรับ gap */
+                margin: 30px 0; /* ปรับระยะห่าง */
+                flex-wrap: wrap; /* ให้ตกลงเมื่อหน้าจอเล็ก */
             }
-    
-            /* Modal Styling */
+
+            /* MODIFIED: Modal Styling */
             #editModal {
                 display: none;
                 position: fixed;
-                top: 30%;
-                left: 50%;
-                transform: translate(-50%, -30%);
-                background: #fff;
-                padding: 30px;
-                border-radius: 8px;
-                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.6); /* พื้นหลังทึบ */
                 z-index: 1000;
-                width: 400px;
-                max-width: 90%;
+                align-items: center;
+                justify-content: center; /* จัดกึ่งกลาง */
             }
-    
+
+            #editModal .modal-content {
+                background: #ffffff;
+                width: 100%;
+                max-width: 450px; /* ขนาดเหมือน manage_users.html */
+                margin: 0 20px;
+                padding: 30px;
+                border-radius: 12px; /* มุมโค้ง */
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); /* Shadow นุ่มนวล */
+                animation: slideIn 0.3s ease; /* Animation เมื่อเปิด */
+            }
+
+            @keyframes slideIn {
+                from { transform: translateY(-20px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+
             #editModal h3 {
-                margin-top: 0;
+                margin: 0 0 20px;
                 text-align: center;
-                color: #2c3e50;
+                color: #1a2b4b;
+                font-size: 1.5rem;
+                font-weight: 600;
             }
-    
+
             #editModal input {
                 width: 100%;
-                padding: 10px;
+                padding: 12px; /* ปรับ padding */
                 margin-bottom: 15px;
-                border: 1px solid #ccc;
-                border-radius: 5px;
-                font-size: 14px;
+                border: 1px solid #d1d9e6; /* ขอบสีอ่อน */
+                border-radius: 8px; /* มุมโค้ง */
+                font-size: 0.95rem;
+                background: #fafafa; /* พื้นหลังอ่อน */
+                transition: border-color 0.3s ease, box-shadow 0.3s ease;
             }
-    
+
             #editModal input:focus {
                 outline: none;
-                border-color: #3498db;
-                box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+                border-color: #3b82f6; /* สีน้ำเงินเมื่อ focus */
+                box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+                background: #ffffff;
             }
-    
+
             .modal-buttons {
                 display: flex;
                 justify-content: center;
                 gap: 10px;
                 margin-top: 10px;
             }
-    
-            /* Backdrop */
+
+            /* MODIFIED: Backdrop */
             .backdrop {
                 position: fixed;
                 top: 0;
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background: rgba(0, 0, 0, 0.5);
+                background: rgba(0, 0, 0, 0.6); /* สีทึบเหมือน modal */
                 display: none;
                 z-index: 99;
             }
-    
-            /* Loading Spinner */
+
+            /* MODIFIED: Loading Spinner */
             #loading {
                 position: fixed;
                 top: 0;
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background-color: rgba(0, 0, 0, 0.5);
+                background: rgba(0, 0, 0, 0.6); /* ทึบขึ้น */
                 display: none;
                 justify-content: center;
                 align-items: center;
                 z-index: 9999;
             }
-    
+
             .spinner {
-                width: 60px;
-                height: 60px;
-                border: 8px solid #e0e0e0;
-                border-top-color: #3498db;
+                width: 50px; /* ขนาดเหมือน manage_users.html */
+                height: 50px;
+                border: 6px solid #e5e7eb;
+                border-top-color: #3b82f6;
                 border-radius: 50%;
-                animation: spin 1s linear infinite;
+                animation: spin 0.8s ease-in-out infinite; /* ความเร็วเดียวกัน */
             }
-    
+
             @keyframes spin {
                 to { transform: rotate(360deg); }
             }
-    
-            /* Responsive Design */
+
+            /* MODIFIED: Responsive Design */
             @media (max-width: 768px) {
                 body {
-                    padding: 15px;
+                    padding: 20px 15px;
                 }
-    
+
                 .container {
-                    margin: 10px;
-                    padding: 15px;
+                    margin: 20px 10px;
+                    padding: 20px;
                 }
-    
+
                 .title {
-                    font-size: 1.5rem;
+                    font-size: 1.75rem;
                 }
-    
+
                 .form {
                     flex-direction: column;
                     align-items: stretch;
+                    gap: 10px;
                 }
-    
+
                 #name, .score, #submit {
                     width: 100%;
                 }
-    
+
                 .table th, .table td {
-                    padding: 8px;
-                    font-size: 12px;
+                    padding: 10px 12px;
+                    font-size: 0.85rem;
                 }
-    
+
+                .btn, .btn-primary, .btn-save, .btn-cancel, .export, #edit, #delete {
+                    padding: 10px 16px;
+                    font-size: 0.9rem;
+                }
+
+                #editModal .modal-content {
+                    padding: 20px;
+                    margin: 0 15px;
+                }
+
+                #editModal h3 {
+                    font-size: 1.3rem;
+                }
+
+                .export-buttons {
+                    flex-direction: column;
+                    gap: 8px;
+                }
+
+                #back {
+                    margin-bottom: 20px;
+                }
+            }
+
+            @media (max-width: 480px) {
+                .title {
+                    font-size: 1.5rem;
+                }
+
+                .container {
+                    padding: 15px;
+                }
+
+                .table {
+                    font-size: 0.8rem;
+                }
+
+                .table th, .table td {
+                    padding: 8px 10px;
+                }
+
                 .btn, .btn-primary, .btn-save, .btn-cancel, .export, #edit, #delete {
                     padding: 8px 12px;
-                    font-size: 12px;
-                }
-    
-                #editModal {
-                    width: 90%;
-                    padding: 20px;
+                    font-size: 0.85rem;
                 }
             }
         </style>
