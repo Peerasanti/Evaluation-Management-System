@@ -1,0 +1,308 @@
+const USER_SHEET = 'form-data';
+const ASSESSMENTS_SHEET = 'Assessments';
+const scriptProp = PropertiesService.getScriptProperties();
+
+function initialSetup() {
+  const activeSpreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  scriptProp.setProperty('key', activeSpreadsheet.getId());
+
+  let userSheet = activeSpreadsheet.getSheetByName(USER_SHEET);
+  if (!userSheet) {
+    userSheet = activeSpreadsheet.insertSheet(USER_SHEET);
+    userSheet.getRange(1, 1, 1, 2).setValues([
+      ['Username', 'Password']
+    ]);
+    userSheet.getRange(2, 1, 1, 2).setValues([
+      ['admin', 'admin']
+    ]);
+  }
+
+  let assessmentsSheet = activeSpreadsheet.getSheetByName(ASSESSMENTS_SHEET);
+  if (!assessmentsSheet) {
+    assessmentsSheet = activeSpreadsheet.insertSheet(ASSESSMENTS_SHEET);
+    assessmentsSheet.getRange(1, 1, 1, 7).setValues([
+      ['AssessorUsername', 'AssesseeName', 'Score1', 'Score2', 'Score3', 'Score4', 'TotalScore']
+    ]);
+  }
+}
+
+function doGet(e) {
+  const action = e.parameter.action;
+  const callback = e.parameter.callback;
+
+  const doc = SpreadsheetApp.openById(scriptProp.getProperty('key'));
+  const userSheet = doc.getSheetByName(USER_SHEET);
+  const assessmentsSheet = doc.getSheetByName(ASSESSMENTS_SHEET);
+
+  let response;
+  if (action === 'checkLogin') {
+    const username = e.parameter.username;
+    const password = e.parameter.password;
+    const lastRow = userSheet.getLastRow();
+    const data = lastRow > 1 ? userSheet.getRange(2, 1, lastRow - 1, userSheet.getLastColumn()).getValues() : [];
+
+    if (!username || !password) {
+      response = { result: 'error', message: 'Username and password are required' };
+    } else {
+      const user = data.find(row => 
+        String(row[0]).trim() === String(username).trim() &&
+        String(row[1]).trim() === String(password).trim()
+      );
+      response = user
+        ? { result: 'success', message: 'Login successful' }
+        : { result: 'error', message: 'Invalid username or password' };
+    }
+  } else if (action === 'getUsers') {
+    const lastRow = userSheet.getLastRow();
+    const data = lastRow > 1 ? userSheet.getRange(2, 1, lastRow - 1, userSheet.getLastColumn()).getValues() : [];
+    response = {
+      result: 'success',
+      users: data.map(row => ({
+        username: row[0],
+        password: row[1]
+      }))
+    };
+  } else if (action === 'getAssessments') {
+    const lastRow = assessmentsSheet.getLastRow();
+    const data = lastRow > 1 ? assessmentsSheet.getRange(2, 1, lastRow - 1, 7).getValues() : [];
+    response = {
+      result: 'success',
+      assessments: data.map(row => ({
+        AssessorUsername: row[0],
+        AssesseeName: row[1],
+        Score1: row[2],
+        Score2: row[3],
+        Score3: row[4],
+        Score4: row[5],
+        TotalScore: row[6]
+      }))
+    };
+  } else {
+    const lastRow = userSheet.getLastRow();
+    const data = lastRow > 1 ? userSheet.getRange(2, 1, lastRow - 1, userSheet.getLastColumn()).getValues() : [];
+    const result = data.map(row => ({
+      username: row[0],
+      password: row[1]
+    }));
+    response = { result: 'success', users: result };
+  }
+
+  if (callback) {
+    if (!/^[a-zA-Z0-9_]+$/.test(callback)) {
+      return ContentService.createTextOutput(
+        JSON.stringify({ result: 'error', message: 'Invalid callback name' })
+      ).setMimeType(ContentService.MimeType.JSON);
+    }
+    const jsonOutput = `${callback}(${JSON.stringify(response)})`;
+    return ContentService
+      .createTextOutput(jsonOutput)
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  } else {
+    return ContentService
+      .createTextOutput(JSON.stringify(response))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doPost(e) {
+  const lock = LockService.getScriptLock();
+  lock.tryLock(10000);
+
+  try {
+    const doc = SpreadsheetApp.openById(scriptProp.getProperty('key'));
+    const userSheet = doc.getSheetByName(USER_SHEET);
+    const assessmentsSheet = doc.getSheetByName(ASSESSMENTS_SHEET);
+
+    const action = e.parameter.action;
+
+    if (action === 'editUser') {
+      const oldUsername = e.parameter.oldUsername;
+      const newUsername = e.parameter.Username;
+      const newPassword = e.parameter.Password;
+
+      let data = [];
+      if (userSheet.getLastRow() > 1) {
+        data = userSheet.getRange(2, 1, userSheet.getLastRow() - 1, userSheet.getLastColumn()).getValues();
+      }
+
+      const rowIndex = data.findIndex(row => String(row[0]).trim() === String(oldUsername).trim());
+      if (rowIndex === -1) {
+        Logger.log(`Edit user failed: User "${oldUsername}" not found`);
+        return ContentService.createTextOutput(
+          JSON.stringify({ result: 'error', message: 'User not found' })
+        ).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      const usernameIndex = 0;
+      if (newUsername !== oldUsername) {
+        const isDuplication = data.some((row, idx) => idx !== rowIndex && String(row[usernameIndex]).trim() === String(newUsername).trim());
+        if (isDuplication) {
+          Logger.log(`Edit user failed: Username "${newUsername}" already exists`);
+          return ContentService.createTextOutput(
+            JSON.stringify({ result: 'error', message: 'Username already exists' })
+          ).setMimeType(ContentService.MimeType.JSON);
+        }
+      }
+
+      const updatedRow = [...data[rowIndex]];
+      updatedRow[0] = newUsername;
+      updatedRow[1] = newPassword;
+
+      userSheet.getRange(rowIndex + 2, 1, 1, updatedRow.length).setValues([updatedRow]);
+      Logger.log(`User updated: ${oldUsername} -> ${newUsername}`);
+
+      return ContentService.createTextOutput(
+        JSON.stringify({ result: 'success', message: 'User updated successfully' })
+      ).setMimeType(ContentService.MimeType.JSON);
+    } else if (action === 'deleteUser') {
+      const username = e.parameter.username;
+
+      let data = [];
+      if (userSheet.getLastRow() > 1) {
+        data = userSheet.getRange(2, 1, userSheet.getLastRow() - 1, userSheet.getLastColumn()).getValues();
+      }
+
+      const rowIndex = data.findIndex(row => String(row[0]).trim() === String(username).trim());
+      if (rowIndex === -1) {
+        Logger.log('User not found: ' + username);
+        return ContentService.createTextOutput(
+          JSON.stringify({ result: 'error', message: 'User not found' })
+        ).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      const lastRowAssessments = assessmentsSheet.getLastRow();
+      let assessmentsData = lastRowAssessments > 1 ? assessmentsSheet.getRange(2, 1, lastRowAssessments - 1, 7).getValues() : [];
+      const rowsToDelete = assessmentsData.map((row, idx) => row[0] === username ? idx + 2 : -1).filter(idx => idx !== -1);
+      rowsToDelete.sort((a, b) => b - a).forEach(row => assessmentsSheet.deleteRow(row));
+
+      userSheet.deleteRow(rowIndex + 2);
+
+      return ContentService.createTextOutput(
+        JSON.stringify({ result: 'success', message: 'User deleted successfully' })
+      ).setMimeType(ContentService.MimeType.JSON);
+    } else if (action === 'addAssessment') {
+      const assessorUsername = e.parameter.AssessorUsername;
+      const assesseeName = e.parameter.AssesseeName;
+      const score1 = parseInt(e.parameter.Score1) || 0;
+      const score2 = parseInt(e.parameter.Score2) || 0;
+      const score3 = parseInt(e.parameter.Score3) || 0;
+      const score4 = parseInt(e.parameter.Score4) || 0;
+      const totalScore = score1 + score2 + score3 + score4;
+
+      const lastRowUsers = userSheet.getLastRow();
+      const usersData = lastRowUsers > 1 ? userSheet.getRange(2, 1, lastRowUsers - 1, userSheet.getLastColumn()).getValues() : [];
+      const userExists = usersData.some(row => String(row[0]).trim() === String(assessorUsername).trim());
+      if (!userExists) {
+        return ContentService.createTextOutput(
+          JSON.stringify({ result: 'error', message: 'Assessor not found' })
+        ).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      const lastRow = assessmentsSheet.getLastRow();
+      let assessmentsData = lastRow > 1 ? assessmentsSheet.getRange(2, 1, lastRow - 1, 7).getValues() : [];
+      const isDuplicate = assessmentsData.some(row => 
+        String(row[0]).trim() === String(assessorUsername).trim() &&
+        String(row[1]).trim() === String(assesseeName).trim()
+      );
+      if (isDuplicate) {
+        return ContentService.createTextOutput(
+          JSON.stringify({ result: 'error', message: 'Assessment already exists for this assessor and assessee' })
+        ).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      const newRow = [assessorUsername, assesseeName, score1, score2, score3, score4, totalScore];
+      assessmentsSheet.getRange(lastRow + 1, 1, 1, 7).setValues([newRow]);
+
+      return ContentService.createTextOutput(
+        JSON.stringify({ result: 'success', message: 'Assessment added successfully' })
+      ).setMimeType(ContentService.MimeType.JSON);
+    } else if (action === 'editAssessment') {
+      const assesseeName = e.parameter.AssesseeName;
+      const score1 = parseInt(e.parameter.Score1) || 0;
+      const score2 = parseInt(e.parameter.Score2) || 0;
+      const score3 = parseInt(e.parameter.Score3) || 0;
+      const score4 = parseInt(e.parameter.Score4) || 0;
+      const totalScore = score1 + score2 + score3 + score4;
+
+      const lastRow = assessmentsSheet.getLastRow();
+      let data = lastRow > 1 ? assessmentsSheet.getRange(2, 1, lastRow - 1, 7).getValues() : [];
+      const rowIndex = data.findIndex(row => 
+        String(row[0]).trim() === String(e.parameter.AssessorUsername).trim() &&
+        String(row[1]).trim() === String(e.parameter.OriginalAssesseeName).trim()
+      );
+
+      if (rowIndex === -1) {
+        return ContentService.createTextOutput(
+          JSON.stringify({ result: 'error', message: 'Assessment not found' })
+        ).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      const updatedRow = [
+        data[rowIndex][0],
+        assesseeName,
+        score1,
+        score2,
+        score3,
+        score4,
+        totalScore
+      ];
+
+      assessmentsSheet.getRange(rowIndex + 2, 1, 1, 7).setValues([updatedRow]);
+
+      return ContentService.createTextOutput(
+        JSON.stringify({ result: 'success', message: 'Assessment updated successfully' })
+      ).setMimeType(ContentService.MimeType.JSON);
+    } else if (action === 'deleteAssessment') {
+      const lastRow = assessmentsSheet.getLastRow();
+      let data = lastRow > 1 ? assessmentsSheet.getRange(2, 1, lastRow - 1, 7).getValues() : [];
+      const rowIndex = data.findIndex(row => 
+        String(row[0]).trim() === String(e.parameter.AssessorUsername).trim() &&
+        String(row[1]).trim() === String(e.parameter.AssesseeName).trim()
+      );
+
+      if (rowIndex === -1) {
+        return ContentService.createTextOutput(
+          JSON.stringify({ result: 'error', message: 'Assessment not found' })
+        ).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      assessmentsSheet.deleteRow(rowIndex + 2);
+
+      return ContentService.createTextOutput(
+        JSON.stringify({ result: 'success', message: 'Assessment deleted successfully' })
+      ).setMimeType(ContentService.MimeType.JSON);
+    } else {
+      const nextRow = userSheet.getLastRow() + 1;
+      const newData = e.parameter;
+
+      let data = [];
+      if (userSheet.getLastRow() > 1) {
+        data = userSheet.getRange(2, 1, userSheet.getLastRow() - 1, userSheet.getLastColumn()).getValues();
+      }
+
+      const usernameIndex = 0;
+      const isDuplication = data.some(row => String(row[usernameIndex]).trim() === String(newData.Username).trim());
+      if (isDuplication) {
+        Logger.log(`Add user failed: Username "${newData.Username}" already exists`);
+        return ContentService.createTextOutput(
+          JSON.stringify({ result: 'error', message: 'Username already exists' })
+        ).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      const newRow = [newData.Username, newData.Password];
+      userSheet.getRange(nextRow, 1, 1, 2).setValues([newRow]);
+      Logger.log(`User added: ${newData.Username} at row ${nextRow}`);
+
+      return ContentService.createTextOutput(
+        JSON.stringify({ result: 'success', row: nextRow })
+      ).setMimeType(ContentService.MimeType.JSON);
+    }
+  } catch (e) {
+    Logger.log('Error: ' + e.toString());
+    return ContentService.createTextOutput(
+      JSON.stringify({ result: 'error', error: e.toString() })
+    ).setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    lock.releaseLock();
+  }
+}
