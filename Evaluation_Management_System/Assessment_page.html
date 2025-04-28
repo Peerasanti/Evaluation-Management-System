@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Overview Assessment Information</title>
         <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+        <script src="config.js"></script>
     
         <style>
             /* MODIFIED: General Styling */
@@ -467,7 +468,7 @@
 
         function loadAssessments() {
             document.getElementById('loading').style.display = 'flex';
-            fetch('https://script.google.com/macros/s/AKfycbwTgoaDLoklK1Wyp7sWhJfotLqvmTaies-XfZhOGXwOFn7jnkbqFvHFcUDRGf0qfjEf/exec?action=getAssessments')
+            fetch(`${API_URL}?action=getAssessments`)
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById('loading').style.display = 'none';
@@ -511,7 +512,7 @@
             const assessorUsername = row.getAttribute('data-assessor');
             const assesseeName = row.getAttribute('data-assessee');
 
-            fetch('https://script.google.com/macros/s/AKfycbwTgoaDLoklK1Wyp7sWhJfotLqvmTaies-XfZhOGXwOFn7jnkbqFvHFcUDRGf0qfjEf/exec', {
+            fetch(API_URL, {
                 method: 'POST',
                 body: new URLSearchParams({
                     'action': 'deleteAssessment',
@@ -557,7 +558,7 @@
             const score_3 = document.getElementById('edit-score3').value;
             const score_4 = document.getElementById('edit-score4').value;
 
-            fetch('https://script.google.com/macros/s/AKfycbwTgoaDLoklK1Wyp7sWhJfotLqvmTaies-XfZhOGXwOFn7jnkbqFvHFcUDRGf0qfjEf/exec', {
+            fetch(API_URL, {
                 method: 'POST',
                 body: new URLSearchParams({
                     'action': 'editAssessment',
