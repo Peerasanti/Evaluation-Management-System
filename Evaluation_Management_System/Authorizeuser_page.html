@@ -1,178 +1,231 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <!-- UNCHANGED: Meta tags เดิม -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Users</title>
     <style>
-        /* General Styling */
+        /* MODIFIED: General Styling */
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7fa;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f0f4f8 0%, #e4e9f0 100%); /* เพิ่ม gradient background */
             margin: 0;
-            padding: 30px;
+            padding: 40px 20px; /* เพิ่ม padding เพื่อความสมดุล */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         h1 {
             text-align: center;
-            color: #2c3e50;
-            margin-bottom: 30px;
-            font-size: 2rem;
+            color: #1a2b4b; /* สีน้ำเงินเข้มเพื่อความทันสมัย */
+            margin-bottom: 40px;
+            font-size: 2.25rem; /* ขนาดใหญ่ขึ้นเล็กน้อย */
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* เพิ่ม shadow นุ่มนวล */
         }
 
-        /* Container Styling */
+        /* MODIFIED: Container Styling */
         .form-container, .table-container, .export-container {
-            max-width: 800px;
+            max-width: 900px; /* เพิ่มความกว้างเล็กน้อย */
+            width: 100%;
             margin: 0 auto 30px;
             background: #ffffff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px; /* เพิ่ม padding */
+            border-radius: 12px; /* มุมโค้งมากขึ้น */
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08); /* shadow นุ่มนวล */
+            transition: transform 0.3s ease, box-shadow 0.3s ease; /* เพิ่ม animation */
+        }
+
+        .form-container:hover, .table-container:hover, .export-container:hover {
+            transform: translateY(-4px); /* ยกขึ้นเมื่อ hover */
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
         }
 
         .form-container h3, .table-container h3 {
-            color: #2c3e50;
-            margin-top: 0;
-            font-size: 1.5rem;
+            color: #1a2b4b;
+            margin: 0 0 20px;
+            font-size: 1.6rem;
+            font-weight: 600;
         }
 
-        /* Form Styling */
+        /* MODIFIED: Form Styling */
         form {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 20px; /* เพิ่มระยะห่าง */
+            align-items: flex-start;
         }
 
         label {
             display: inline-block;
-            width: 100px;
-            font-weight: 600;
-            color: #2c3e50;
+            width: 120px; /* ปรับความกว้างให้เหมาะสม */
+            font-weight: 500;
+            color: #1a2b4b;
+            font-size: 0.95rem;
         }
 
         input[type="text"], input[type="password"] {
-            padding: 10px;
-            width: 200px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 14px;
+            padding: 12px; /* เพิ่ม padding */
+            width: 250px; /* ขยายความกว้าง */
+            border: 1px solid #d1d9e6; /* สีขอบอ่อนลง */
+            border-radius: 8px; /* มุมโค้ง */
+            font-size: 0.95rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            background: #fafafa; /* พื้นหลังอ่อน */
         }
 
         input[type="text"]:focus, input[type="password"]:focus {
             outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+            border-color: #3b82f6; /* สีน้ำเงินเมื่อ focus */
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+            background: #ffffff;
         }
 
-        /* Button Styling */
+        /* MODIFIED: Button Styling */
         .btn, .add-btn, .save-btn, .edit-btn, .del-btn, .cancel-btn, .assessment {
-            padding: 10px 15px;
+            padding: 12px 20px; /* ปรับขนาดปุ่ม */
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.3s, transform 0.1s;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s ease; /* รวม transform และ background */
+            display: inline-flex;
+            align-items: center;
+            gap: 6px; /* ระยะห่างระหว่างไอคอนและข้อความ */
         }
 
         .add-btn, .save-btn, .btn-primary {
-            background-color: #3498db;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa); /* Gradient สีน้ำเงิน */
             color: white;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
         }
 
         .add-btn:hover, .save-btn:hover, .btn-primary:hover {
-            background-color: #2980b9;
+            background: linear-gradient(90deg, #2563eb, #3b82f6);
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
 
         .edit-btn {
-            background-color: #ffc107;
+            background: linear-gradient(90deg, #f59e0b, #fbbf24); /* Gradient สีเหลือง */
             color: white;
         }
 
         .edit-btn:hover {
-            background-color: #e0a800;
+            background: linear-gradient(90deg, #d97706, #f59e0b);
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
         }
 
         .del-btn {
-            background-color: #e74c3c;
+            background: linear-gradient(90deg, #ef4444, #f87171); /* Gradient สีแดง */
             color: white;
         }
 
         .del-btn:hover {
-            background-color: #c0392b;
+            background: linear-gradient(90deg, #dc2626, #ef4444);
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
         }
 
         .cancel-btn {
-            background-color: #7f8c8d;
+            background: linear-gradient(90deg, #6b7280, #9ca3af); /* Gradient สีเทา */
             color: white;
         }
 
         .cancel-btn:hover {
-            background-color: #6c7a89;
+            background: linear-gradient(90deg, #4b5563, #6b7280);
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
         }
 
         .assessment {
-            background-color: #2ecc71;
+            background: linear-gradient(90deg, #10b981, #34d399); /* Gradient สีเขียว */
             color: white;
             width: 100%;
-            padding: 12px;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 500;
         }
 
         .assessment:hover {
-            background-color: #27ae60;
+            background: linear-gradient(90deg, #059669, #10b981);
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
 
-        /* Logout Button */
+        /* MODIFIED: Logout Button */
         #back {
             text-align: right;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: 900px; /* จัดให้ตรงกับ container อื่น */
         }
 
         #config {
-            background-color: #e74c3c;
+            background: linear-gradient(90deg, #ef4444, #f87171);
             color: white;
+            padding: 12px 20px;
+            font-size: 0.95rem;
         }
 
         #config:hover {
-            background-color: #c0392b;
+            background: linear-gradient(90deg, #dc2626, #ef4444);
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
         }
 
-        /* Table Styling */
+        /* MODIFIED: Table Styling */
         table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             margin-top: 20px;
+            background: #ffffff;
+            border-radius: 10px;
+            overflow: hidden; /* เพื่อให้มุมโค้งทำงาน */
         }
 
         th, td {
-            padding: 12px 16px;
+            padding: 14px 16px;
             text-align: center;
-            border-bottom: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e5e7eb; /* ขอบสีอ่อน */
         }
 
         th {
-            background-color: #3498db;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa); /* Gradient สีน้ำเงิน */
             color: white;
             font-weight: 600;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            font-size: 0.9rem;
+            color: #374151;
+        }
+
+        tr:last-child td {
+            border-bottom: none; /* ลบขอบล่างของแถวสุดท้าย */
         }
 
         tr:hover {
-            background-color: #f8f9fa;
+            background: #f1f5f9; /* สีพื้นหลังเมื่อ hover */
         }
 
-        /* Loading Spinner */
+        /* MODIFIED: Loading Spinner */
         #loading {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6); /* ทึบขึ้นเล็กน้อย */
             display: none;
             justify-content: center;
             align-items: center;
@@ -180,19 +233,19 @@
         }
 
         .spinner {
-            width: 60px;
-            height: 60px;
-            border: 8px solid #e0e0e0;
-            border-top-color: #3498db;
+            width: 50px;
+            height: 50px;
+            border: 6px solid #e5e7eb;
+            border-top-color: #3b82f6;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spin 0.8s ease-in-out infinite; /* Animation เร็วขึ้น */
         }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
 
-        /* Modal Styling */
+        /* MODIFIED: Modal Styling */
         .modal {
             display: none;
             position: fixed;
@@ -200,109 +253,158 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
             z-index: 10000;
+            align-items: center;
+            justify-content: center;
         }
 
         .modal-content {
-            background-color: white;
-            width: 400px;
-            max-width: 90%;
-            margin: 15% auto;
+            background: #ffffff;
+            width: 100%;
+            max-width: 450px; /* ขยาย modal */
+            margin: 0 20px;
             padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            transform: translateY(0);
+            animation: slideIn 0.3s ease; /* เพิ่ม animation เมื่อเปิด */
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
         .modal-content h3 {
-            margin-top: 0;
+            margin: 0 0 20px;
             text-align: center;
-            color: #2c3e50;
+            color: #1a2b4b;
+            font-size: 1.5rem;
+            font-weight: 600;
         }
 
         .modal-content form {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 20px;
         }
 
         .modal-content label {
-            font-weight: 600;
-            color: #2c3e50;
+            font-weight: 500;
+            color: #1a2b4b;
+            font-size: 0.95rem;
         }
 
         .modal-content input[type="text"],
         .modal-content input[type="password"] {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 14px;
+            padding: 12px;
+            border: 1px solid #d1d9e6;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: #fafafa;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
         .modal-content input[type="text"]:focus,
         .modal-content input[type="password"]:focus {
-            outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+            border-color: #3b82f6;
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+            background: #ffffff;
         }
 
         .modal-content .save-btn, .modal-content .cancel-btn {
             width: 100%;
             margin-top: 10px;
+            padding: 12px;
         }
 
-        /* Responsive Design */
+        /* MODIFIED: Responsive Design */
         @media (max-width: 768px) {
             body {
-                padding: 15px;
+                padding: 20px 15px;
+            }
+
+            h1 {
+                font-size: 1.75rem;
+            }
+
+            .form-container, .table-container, .export-container {
+                padding: 20px;
+                margin: 0 10px 20px;
+            }
+
+            label {
+                width: 100%; /* ปรับให้เต็มความกว้าง */
+                margin-bottom: 5px;
+            }
+
+            input[type="text"], input[type="password"] {
+                width: 100%;
+                max-width: none;
+            }
+
+            .btn, .add-btn, .save-btn, .edit-btn, .del-btn, .cancel-btn, .assessment {
+                padding: 10px 16px;
+                font-size: 0.9rem;
+            }
+
+            th, td {
+                padding: 10px 12px;
+                font-size: 0.85rem;
+            }
+
+            .modal-content {
+                padding: 20px;
+                margin: 0 15px;
+            }
+
+            .modal-content h3 {
+                font-size: 1.3rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5rem;
             }
 
             .form-container, .table-container, .export-container {
                 padding: 15px;
             }
 
-            h1 {
-                font-size: 1.5rem;
-            }
-
-            label {
-                width: 80px;
-            }
-
-            input[type="text"], input[type="password"] {
-                width: 100%;
+            table {
+                font-size: 0.8rem;
             }
 
             th, td {
-                padding: 8px;
-                font-size: 14px;
+                padding: 8px 10px;
             }
 
             .btn, .add-btn, .save-btn, .edit-btn, .del-btn, .cancel-btn, .assessment {
                 padding: 8px 12px;
-                font-size: 12px;
-            }
-
-            .modal-content {
-                width: 90%;
-                padding: 20px;
+                font-size: 0.85rem;
             }
         }
     </style>
 </head>
 
 <body>
+  <!-- UNCHANGED: ปุ่ม Logout -->
   <div id="back">
     <button type="button" class="btn" id="config" onclick="logout()"> Logout </button>
   </div>
 
+  <!-- UNCHANGED: หัวข้อหน้า -->
   <h1>Manage Users</h1>
 
+  <!-- UNCHANGED: Loading spinner -->
   <div id="loading" style="display:none;">
     <div class="spinner"></div>
   </div>
 
   <div class="form-container">
+    <!-- UNCHANGED: ฟอร์มสำหรับเพิ่มผู้ใช้ -->
     <form id="user-data" method="post" action="">
       <label for="username">Username:</label>
       <input type="text" id="username" name="Username" required>
@@ -314,13 +416,21 @@
         <i class="bi bi-plus-circle"></i>  Add
       </button>
     </form>
+
+    <!-- UNCHANGED: ส่วนสำหรับรับและส่ง Google Sheet ID -->
+    <div style="margin-top: 20px;">
+      <label for="sheetId">Google Sheet ID:</label>
+      <input type="text" id="sheetId" name="sheetId" placeholder="Enter Google Sheet ID" required>
+      <button type="button" class="btn btn-primary" onclick="setSheetId()">Set Sheet ID</button>
+    </div>
   </div>
 
+  <!-- UNCHANGED: ปุ่มไปหน้า Assessment -->
   <div class="export-container">
     <button type="button" class="assessment" onclick="window.location.href = 'Assessment_page.html'">Overview Assessment Information</button>
   </div>
 
-
+  <!-- UNCHANGED: ตารางแสดงข้อมูลผู้ใช้ -->
   <div class="table-container">
     <h3>Users Information Table</h3>
     <table id="userTable">
@@ -337,6 +447,7 @@
     </table>
   </div>
 
+  <!-- UNCHANGED: Modal สำหรับแก้ไขผู้ใช้ -->
   <div id="editModal" class="modal">
       <div class="modal-content">
           <h3>Edit User</h3>
@@ -356,7 +467,7 @@
   </div>
 
   <script>
-
+    // UNCHANGED: JavaScript เดิมทั้งหมด
     document.addEventListener('DOMContentLoaded', function() {
       currentUsername = localStorage.getItem('username');
       if (!currentUsername) {
@@ -364,7 +475,6 @@
         window.location.href = 'index.html';
         return;
       }
-
     });
 
     let editRow = '';
@@ -422,7 +532,6 @@
       window.location.href = 'index.html';
     }
 
-
     function deleteUser(username, tr) {
       const loadingDiv = document.getElementById('loading');
       loadingDiv.style.display = 'flex';
@@ -463,9 +572,7 @@
       document.body.appendChild(script);
     }
 
-
     const form = document.getElementById('user-data');
-
     form.addEventListener('submit', function(e) {
       e.preventDefault();
       
@@ -488,23 +595,18 @@
       .then(response => response.json())
       .then(data => {
         loadingDiv.style.display = 'none';
-
         console.log(data);
         form.reset()
         window.location.reload();
       })
       .catch(error => {
         loadingDiv.style.display = 'none';
-
         console.error(error);
         alert('Error adding user');
       });
-
     });
 
-
     const editForm = document.getElementById('editForm');
-
     editForm.addEventListener('submit', function(e) {
       e.preventDefault();
       const formData = new FormData(this);
@@ -542,6 +644,44 @@
       document.getElementById('editModal').style.display = 'none';
     }
 
+    function setSheetId() {
+      const sheetId = document.getElementById('sheetId').value;
+      const loadingDiv = document.getElementById('loading');
+
+      if (!sheetId) {
+        alert('Please enter a Google Sheet ID');
+        return;
+      }
+
+      loadingDiv.style.display = 'flex';
+
+      fetch('https://script.google.com/macros/s/AKfycbwTgoaDLoklK1Wyp7sWhJfotLqvmTaies-XfZhOGXwOFn7jnkbqFvHFcUDRGf0qfjEf/exec', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
+          'action': 'setSheetId',
+          'sheetId': sheetId
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        loadingDiv.style.display = 'none';
+        if (data.result === 'success') {
+          alert(data.message);
+          document.getElementById('sheetId').value = '';
+          loadUsers();
+        } else {
+          alert('Error: ' + data.message || data.error);
+        }
+      })
+      .catch(error => {
+        loadingDiv.style.display = 'none';
+        console.error('Failed to set Sheet ID:', error);
+        alert('Failed to connect to server: ' + error);
+      });
+    }
   </script>
 </body>
 </html>

@@ -2,13 +2,16 @@ const USER_SHEET = 'form-data';
 const ASSESSMENTS_SHEET = 'Assessments';
 const scriptProp = PropertiesService.getScriptProperties();
 
-function initialSetup() {
-  const activeSpreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  scriptProp.setProperty('key', activeSpreadsheet.getId());
+// MODIFIED: ปรับ initialSetup เพื่อใช้ Sheet ID จาก PropertiesService
+function initialSetup(sheetId) {
+  // ใช้ Sheet ID จาก parameter หรือ PropertiesService
+  const spreadsheet = SpreadsheetApp.openById(sheetId || scriptProp.getProperty('key'));
+  scriptProp.setProperty('key', spreadsheet.getId());
 
-  let userSheet = activeSpreadsheet.getSheetByName(USER_SHEET);
+  // UNCHANGED: สร้างหรือตั้งค่า sheet สำหรับผู้ใช้
+  let userSheet = spreadsheet.getSheetByName(USER_SHEET);
   if (!userSheet) {
-    userSheet = activeSpreadsheet.insertSheet(USER_SHEET);
+    userSheet = spreadsheet.insertSheet(USER_SHEET);
     userSheet.getRange(1, 1, 1, 2).setValues([
       ['Username', 'Password']
     ]);
@@ -17,15 +20,17 @@ function initialSetup() {
     ]);
   }
 
-  let assessmentsSheet = activeSpreadsheet.getSheetByName(ASSESSMENTS_SHEET);
+  // UNCHANGED: สร้างหรือตั้งค่า sheet สำหรับการประเมิน
+  let assessmentsSheet = spreadsheet.getSheetByName(ASSESSMENTS_SHEET);
   if (!assessmentsSheet) {
-    assessmentsSheet = activeSpreadsheet.insertSheet(ASSESSMENTS_SHEET);
+    assessmentsSheet = spreadsheet.insertSheet(ASSESSMENTS_SHEET);
     assessmentsSheet.getRange(1, 1, 1, 7).setValues([
       ['AssessorUsername', 'AssesseeName', 'Score1', 'Score2', 'Score3', 'Score4', 'TotalScore']
     ]);
   }
 }
 
+// UNCHANGED: ฟังก์ชัน doGet สำหรับจัดการคำขอ GET
 function doGet(e) {
   const action = e.parameter.action;
   const callback = e.parameter.callback;
@@ -104,17 +109,46 @@ function doGet(e) {
   }
 }
 
+// MODIFIED: เพิ่ม action 'setSheetId' ใน doPost เพื่อรับและตั้งค่า Sheet ID ใหม่
 function doPost(e) {
   const lock = LockService.getScriptLock();
   lock.tryLock(10000);
 
   try {
+    // NEW: เพิ่ม action สำหรับตั้งค่า Sheet ID ใหม่
+    const action = e.parameter.action;
+    if (action === 'setSheetId') {
+      const newSheetId = e.parameter.sheetId;
+      if (!newSheetId) {
+        return ContentService.createTextOutput(
+          JSON.stringify({ result: 'error', message: 'Sheet ID is required' })
+        ).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      // ตรวจสอบว่า Sheet ID ถูกต้อง
+      try {
+        SpreadsheetApp.openById(newSheetId);
+      } catch (error) {
+        return ContentService.createTextOutput(
+          JSON.stringify({ result: 'error', message: 'Invalid Sheet ID' })
+        ).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      // อัปเดต Sheet ID และตั้งค่า database
+      scriptProp.setProperty('key', newSheetId);
+      initialSetup(newSheetId);
+
+      return ContentService.createTextOutput(
+        JSON.stringify({ result: 'success', message: 'Sheet ID updated and database setup completed' })
+      ).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // UNCHANGED: โหลด spreadsheet เดิมสำหรับ action อื่น ๆ
     const doc = SpreadsheetApp.openById(scriptProp.getProperty('key'));
     const userSheet = doc.getSheetByName(USER_SHEET);
     const assessmentsSheet = doc.getSheetByName(ASSESSMENTS_SHEET);
 
-    const action = e.parameter.action;
-
+    // UNCHANGED: การจัดการ action อื่น ๆ
     if (action === 'editUser') {
       const oldUsername = e.parameter.oldUsername;
       const newUsername = e.parameter.Username;
